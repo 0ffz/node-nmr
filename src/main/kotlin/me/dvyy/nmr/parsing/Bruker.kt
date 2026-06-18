@@ -1,14 +1,10 @@
 package me.dvyy.nmr.parsing
 
-import org.jetbrains.kotlinx.multik.api.mk
-import org.jetbrains.kotlinx.multik.api.ndarray
-import org.jetbrains.kotlinx.multik.ndarray.complex.ComplexDoubleArray
-import org.jetbrains.kotlinx.multik.ndarray.complex.ComplexDouble
-import org.jetbrains.kotlinx.multik.ndarray.data.D1
-import org.jetbrains.kotlinx.multik.ndarray.data.NDArray
-import org.jetbrains.kotlinx.multik.ndarray.data.get
-import org.jetbrains.kotlinx.multik.ndarray.operations.toComplexDoubleArray
-import org.jetbrains.kotlinx.multik.ndarray.operations.toList
+import me.dvyy.nmr.complex.ComplexDouble
+import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.complex.toComplexArray
+import org.jetbrains.bio.viktor.F64Array
+import org.jetbrains.bio.viktor.F64FlatArray
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -89,10 +85,9 @@ class BrukerDataset(private val directoryPath: String) {
     /**
      * Reads the 1D 'fid' file and returns a Multik 1D array of ComplexDouble.
      */
-    fun readFid(): NDArray<ComplexDouble, D1> {
+    fun readFid(): ComplexDoubleArray {
         val fidFile = File(dir, "fid")
         require(fidFile.exists()) { "fid file not found in $directoryPath" }
-
         return readBinaryData(fidFile, pointsToRead = params.timeDomainPoints)
     }
 
@@ -100,7 +95,7 @@ class BrukerDataset(private val directoryPath: String) {
      * Pre-built architecture for reading 2D data.
      * Reads the 'ser' file and slices it into a list of 1D Multik arrays.
      */
-    fun readSer(): List<NDArray<ComplexDouble, D1>> {
+    fun readSer(): List<ComplexDoubleArray> {
         val serFile = File(dir, "ser")
         require(serFile.exists()) { "ser file not found in $directoryPath" }
 
@@ -114,21 +109,21 @@ class BrukerDataset(private val directoryPath: String) {
 
         // Future mapping to a 2D array or returning the list of FIDs
         return flatData.toList().chunked(complexPointsPerFid) { chunk ->
-            mk.ndarray(chunk)
+            chunk.toComplexArray()
         }
     }
 
     /**
      * Internal generic binary reader using Java NIO.
      */
-    private fun readBinaryData(file: File, pointsToRead: Int): NDArray<ComplexDouble, D1> {
+    private fun readBinaryData(file: File, pointsToRead: Int): ComplexDoubleArray {
         // Note: For massive 'ser' files (GBs), consider replacing readBytes()
         // with a FileChannel and MemoryMappedBuffer to avoid OOM exceptions.
         val bytes = file.readBytes()
         val buffer = ByteBuffer.wrap(bytes).order(params.byteOrder)
 
         val complexPoints = pointsToRead / 2
-        val complexList = ArrayList<ComplexDouble>(complexPoints)
+        val complexList = ComplexDoubleArray(complexPoints)
 
         // Bruker sequential complex points alternate: Real, Imag, Real, Imag...
         for (i in 0 until complexPoints) {
@@ -137,10 +132,10 @@ class BrukerDataset(private val directoryPath: String) {
                 2 -> buffer.double to buffer.double                 // Float64
                 else -> throw UnsupportedOperationException("Unsupported DTYPA: ${params.dataFormat}")
             }
-            complexList.add(ComplexDouble(re, im))
+            complexList[i] = ComplexDouble(re, im)
         }
 
-        return mk.ndarray(complexList)
+        return complexList
     }
 }
 
@@ -151,7 +146,7 @@ class BrukerDataset(private val directoryPath: String) {
  * @param acqus The parsed acqus parameters map from your BrukerDataset.
  * @return A new Ndarray with the group delay shifted to the end.
  */
-fun NDArray<ComplexDouble, D1>.removeDigitalFilter(acqus: Map<String, String>): NDArray<ComplexDouble, D1> {
+fun ComplexDoubleArray.removeDigitalFilter(acqus: Map<String, String>): ComplexDoubleArray {
 
     // 1. Look up the Group Delay.
     val grpdly = acqus["GRPDLY"]?.toDoubleOrNull()
@@ -192,7 +187,7 @@ fun NDArray<ComplexDouble, D1>.removeDigitalFilter(acqus: Map<String, String>): 
 //        shiftedData.add(this[i])
 //    }
 
-    return mk.ndarray(shiftedData)
+    return shiftedData
 }
 
 /**

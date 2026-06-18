@@ -7,56 +7,23 @@ import imgui.app.Configuration
 import imgui.extension.implot.ImPlot
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
+import me.dvyy.nmr.complex.ComplexDouble
+import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.complex.toComplexArray
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.parsing.removeDigitalFilter
+import me.dvyy.nmr.propack.HankelOperator
+import me.dvyy.nmr.propack.propack
+import me.dvyy.nmr.svd.reconstructDiagonals
 import org.apache.commons.math3.complex.Complex
 import org.apache.commons.math3.transform.DftNormalization
 import org.apache.commons.math3.transform.FastFourierTransformer
-import org.apache.commons.math3.transform.TransformType
-import org.jetbrains.bio.viktor.toF64Array
-import org.jetbrains.kotlinx.multik.ndarray.complex.ComplexDoubleArray
-import org.jetbrains.kotlinx.multik.ndarray.complex.map
-import org.jetbrains.kotlinx.multik.ndarray.complex.ComplexDouble
-import org.jetbrains.kotlinx.multik.ndarray.complex.mapIndexed
-import org.jetbrains.kotlinx.multik.ndarray.complex.mapTo
-import org.jetbrains.kotlinx.multik.ndarray.complex.take
-import org.jetbrains.kotlinx.multik.ndarray.complex.toComplexDoubleArray
-import org.jetbrains.kotlinx.multik.ndarray.operations.map
-import org.jetbrains.kotlinx.multik.ndarray.operations.toComplexDoubleArray
-import org.jetbrains.kotlinx.multik.ndarray.operations.toDoubleArray
-import smile.tensor.Vector
-import smile.wavelet.HaarWavelet
+import org.apache.commons.math3.transform.TransformType.FORWARD
+import org.jetbrains.bio.viktor.asF64Array
 import java.io.IOException
-import kotlin.math.exp
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.math.sqrt
-
-
-//fun main() {
-//    BrukerDataset()
-//    val ndarray =mk.ndarray(arrayOf(
-//        doubleArrayOf(1.0, 2.0, 3.0),
-//        doubleArrayOf(4.0, 5.0, 6.0),
-//        doubleArrayOf(7.0, 8.0, 9.0)
-//    ))
-//    val svd = mk.linalg.svd(ndarray)
-//    val matrix = F64Array.invoke(numRows = 10, numColumns = 10) { x, y -> (x * y).toDouble() }
-//    println(matrix)
-//    Complex()
-//    GraalPyResources.createContext().use { context ->
-////        println(context.eval("python", "'Hello Python!'").asString())
-//        val src = """
-//           from termcolor import colored
-//           colored_text = colored("hello java", "red", attrs=["reverse", "blink"])
-//           print(colored_text)
-//
-//           """.trimIndent()
-//        context.eval("python", src)
-//    }
-//}
-
-class ComplexArray(val re: DoubleArray, val im: DoubleArray)
+import kotlin.math.exp
 
 class Main : Application() {
     override fun initImGui(config: Configuration?) {
@@ -80,44 +47,62 @@ class Main : Application() {
 
     }
 
-    private var fidRe = doubleArrayOf()
+    private var fid = doubleArrayOf()
+    private var fidDenoised = doubleArrayOf()
     private var fidIm = doubleArrayOf()
     private var fft = doubleArrayOf()
-    fun init() {
-        val brukerData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/5")
+    private var fftDenoised = doubleArrayOf()
 
+    fun init() {
+        val brukerData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/10")
+        val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/5")
+        val cleanFid = cleanData.readFid().removeDigitalFilter(brukerData.acqus)
+            .takeComplex(4096)
+
+//            .expApodization(0.0005)
         // 1. You can freely inspect text parameters
         println("Pulse Program: ${brukerData.acqus["PULPROG"]}")
 
         println("Spectrometer Frequency: ${brukerData.acqus["SFO1"]} MHz")
         // 2. Load the 1D FID
-        try {
-            val fid = brukerData.readFid().removeDigitalFilter(brukerData.acqus)
-                .toComplexDoubleArray()
-                .expApodization(0.0005)
+        val fid = brukerData.readFid()
+            .removeDigitalFilter(brukerData.acqus)
+            .takeComplex(4096)
+            .expApodization(0.00008)
+        val hankel = HankelOperator(fid.toMemorySegment())
+        val rows = fid.size / 2
+        val cols = fid.size - rows + 1
+        val result = propack(hankel, rows, cols, numWanted = 13)
+        println(result.singularValues.toList())
+        val denoised = result.reconstructDiagonals()
+//        return
 //            fft = fid.map { it.re }.toDoubleArray()
-            fidRe = fid.map { it.re }.toDoubleArray()
-//            fidIm = fid.map { it.im }.toDoubleArray()
-//            HaarWavelet().transform(fidRe)
-//            HaarWavelet().transform(fidIm)
-            val denoised =  hankelSVD(fid.map { it.re }.toDoubleArray(), k = 12)
-            denoised[0] = denoised[0] / 2
-//            val result = FastFourierTransformer(DftNormalization.STANDARD).transform(denoised, TransformType.FORWARD)
-            fft = denoised
-//            fft = result.toKotlin().fftShift().map { -it.re }.toDoubleArray().reversedArray()
-        } catch (e: Exception) {
-            println("Failed to read data: ${e.message}")
-        }
+////            fidIm = fid.map { it.im }.toDoubleArray()
+//        val denoised = hankelSVD(fid.takeComplex(2048), k = 12)
+////        val denoised = fid
+//        denoised[0] = denoised[0] / 2
+//            fft = denoised.map { it.re }.toDoubleArray()
+        val fourier = FastFourierTransformer(DftNormalization.UNITARY)
+//        this@Main.fid = fid.real()
+        fft = fourier.transform(cleanFid.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
+        fft.asF64Array().let {  it /= it.max() }
+        fidDenoised = denoised.abs()
+        fftDenoised = fourier.transform(denoised.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
+        fftDenoised.asF64Array().let {  it /= it.max() }
     }
 
     override fun process() {
         val viewport = ImGui.getMainViewport()
         ImGui.setNextWindowPos(viewport.posX, viewport.posY)
         ImGui.setNextWindowSize(viewport.sizeX, viewport.sizeY)
-        if (ImGui.begin("Demo", ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoResize)) {
+        if (ImGui.begin(
+                "Demo",
+                ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoResize
+            )
+        ) {
             ImPlot.beginPlot("Hello world", ImGui.getContentRegionAvailX(), ImGui.getContentRegionAvailY())
-//            ImPlot.plotLine("Original", fidRe)
-            ImPlot.plotLine("Denoised", fft)
+            ImPlot.plotLine("Original", fft)
+            ImPlot.plotLine("Denoised", fftDenoised)
             ImPlot.endPlot()
         }
         ImGui.end()
@@ -132,6 +117,11 @@ class Main : Application() {
         }
     }
 }
+//
+//fun ComplexDoubleArray.toOjalgo(): Array1D<ComplexNumber> = Array1D.C128.make(size).also { arr ->
+//    forEachIndexed { index, complex -> arr[index] = ComplexNumber.of(complex.re, complex.im) }
+//}
+
 fun ComplexDoubleArray.fftShift(): ComplexDoubleArray {
     val n = this.size
     val half = n / 2
@@ -144,26 +134,21 @@ fun ComplexDoubleArray.fftShift(): ComplexDoubleArray {
 
     return shifted
 }
+
 fun ComplexDoubleArray.toApache() = Array(size) { Complex(this[it].re, this[it].im) }
 fun Array<Complex>.toKotlin() = ComplexDoubleArray(size) { ComplexDouble(this[it].real, this[it].imaginary) }
 fun ComplexDoubleArray.expApodization(lb: Double): ComplexDoubleArray {
     return this.mapIndexed { index, complex ->
         val decay = exp(-Math.PI * lb * index)
         ComplexDouble(complex.re * decay, complex.im * decay)
-    }.toComplexDoubleArray()
+    }.toComplexArray()
+}
+
+fun ComplexDoubleArray.takeComplex(n: Int): ComplexDoubleArray {
+    return ComplexDoubleArray(n) { this[it] }
 }
 
 fun main() {
     ImPlot.createContext()
     Application.launch(Main())
-//    val imGuiGlfw = ImGuiImplGlfw()
-//    val imGuiGl3 = ImGuiImplGl3()
-//    val windowHandle: Long = (Gdx.graphics as Lwjgl3Graphics).getWindow().getWindowHandle()
-//    ImGui.createContext()
-//    val io: ImGuiIO = ImGui.getIO()
-//    io.setIniFilename(null) //Optional. Disables saving window layouts between sessions
-//    io.getFonts().addFontDefault()
-//    io.getFonts().build()
-//    imGuiGlfw.init(windowHandle, true)
-//    imGuiGl3.init("#version 150")
 }

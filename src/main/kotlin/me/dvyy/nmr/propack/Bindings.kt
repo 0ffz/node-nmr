@@ -1,0 +1,41 @@
+package me.dvyy.nmr.propack
+
+import java.lang.foreign.MemorySegment
+
+/** Target for the singular triplets. */
+enum class SingularTripletTarget(val code: Byte) {
+    LARGEST('L'.code.toByte()),
+    SMALLEST('S'.code.toByte())
+}
+
+/** Determines if singular vectors should be computed. */
+enum class ComputeVectors(val code: Byte) {
+    YES('Y'.code.toByte()),
+    NO('N'.code.toByte())
+}
+
+/**
+ * High-performance, zero-allocation callback for matrix-vector multiplication.
+ * Fortran signature: SUBROUTINE APROD(TRANSA,M,N,X,Y,ZPARM,IPARM)
+ */
+fun interface AprodOperator {
+    /**
+     * Computes Y = A * X (if transpose is false) or Y = A^H * X (if transpose is true).
+     * * @param transpose If true, apply the conjugate transpose (adjoint).
+     * @param rows Number of rows in A.
+     * @param cols Number of columns in A.
+     * @param x Input vector (Complex Double Array).
+     * @param y Output vector (Complex Double Array). MUST MUTATE IN PLACE.
+     * @param zParm Complex double array for passing user data.
+     * @param iParm Integer array for passing user data.
+     */
+    fun multiply(
+        transpose: Boolean,
+        rows: Int,
+        cols: Int,
+        x: MemorySegment,
+        y: MemorySegment,
+        zParm: MemorySegment,
+        iParm: MemorySegment
+    )
+}
