@@ -135,3 +135,7 @@ fun complexDoubleArrayOf(vararg values: ComplexDouble) = ComplexDoubleArray(valu
         this[i] = values[i]
     }
 }
+
+fun ComplexDoubleArray.takeComplex(n: Int): ComplexDoubleArray {
+    return ComplexDoubleArray(n) { this[it] }
+}

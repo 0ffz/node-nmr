@@ -32,6 +32,7 @@ fun propack(
     val errorBounds = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
 
     // Allocate Work Arrays
+    //FIXME calculate correctly, the +1000 is padding to avoid some crashes in the meantime
     val workSize = (rows + cols + 10 * dim + 2 * (dim * dim) + 5 + maxOf(rows, cols, 4 * dim + 4)) + 1000
     val work = arena.allocate(JAVA_DOUBLE, workSize.toLong())
 
@@ -87,7 +88,7 @@ fun propack(
         val singularValues = DoubleArray(numWanted) { i ->
             sigmaValues.get(JAVA_DOUBLE, i * 8L)
         }
-        println("Convergence achieved! Singular values: $singularValues")
+        println("Convergence achieved! Singular values: ${singularValues.toList()}")
 
         val U = ComplexDoubleMatrix(
             Array(numWanted) { col ->
