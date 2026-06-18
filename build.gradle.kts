@@ -1,6 +1,6 @@
 plugins {
     application
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.4.0"
     id("org.graalvm.python") version "25.0.3"
 }
 
@@ -18,7 +18,7 @@ dependencies {
 //    implementation("space.kscience:kmath-core:0.5.0")
 //    implementation("space.kscience:kmath-viktor:0.5.0")
 //    implementation("space.kscience:kmath-complex:0.5.0")
-//    implementation("com.github.haifengl:smile-core:6.2.0")
+    implementation("com.github.haifengl:smile-core:6.2.0")
 //    implementation("com.github.haifengl:smile-kotlin:6.2.0")
 //    implementation("org.ejml:ejml-all:0.44.0")
     implementation("org.jetbrains.bio:viktor:2.0.0")

@@ -1,5 +1,8 @@
 package me.dvyy.nmr.propack
 
+import fftw.FftwDirection
+import fftw.FftwFlag
+import fftw.FftwPlan1D
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
@@ -245,13 +248,13 @@ object PropackZlansvd {
 
             // 2. Calculate byte sizes to reinterpret the array pointers
             // Complex Double = 16 bytes per element (2x 8-byte doubles).
-            val xElements = if (transpose) m else n
-            val yElements = if (transpose) n else m
+            val inSize = if (transpose) m else n
+            val outSize = if (transpose) n else m
 
-            val xSized = pX.reinterpret(xElements * 16L)
-            val ySized = pY.reinterpret(yElements * 16L)
+            val xInput = pX.reinterpret(inSize * 16L)
+            val yOutput = pY.reinterpret(outSize * 16L)
 
-            op.multiply(transpose, m, n, xSized, ySized, pZparm, pIparm)
+            op.multiply(transpose, m, n, xInput, yOutput, pZparm, pIparm)
         }
     }
 }

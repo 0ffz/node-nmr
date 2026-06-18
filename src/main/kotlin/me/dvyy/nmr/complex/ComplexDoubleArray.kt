@@ -4,6 +4,7 @@ import java.lang.foreign.MemorySegment
 
 @JvmInline
 value class ComplexDoubleArray(
+    @JvmField
     val data: DoubleArray,
 ) {
     constructor(size: Int) : this(DoubleArray(size * 2))
@@ -76,6 +77,15 @@ value class ComplexDoubleArray(
 
     fun toList() = map { it }
 
+    inline fun getRe(index: Int) = data[index * 2]
+    inline fun getIm(index: Int) = data[index * 2 + 1]
+
+    inline fun setRe(index: Int, value: Double) {
+        data[index * 2] = value
+    }
+    inline fun setIm(index: Int, value: Double) {
+        data[index * 2 + 1] = value
+    }
     /**
      * Converts to interleaved complex memory segment
      */

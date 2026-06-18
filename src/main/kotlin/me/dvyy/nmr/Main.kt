@@ -1,5 +1,9 @@
 package me.dvyy.nmr
 
+import fftw.FftwComplexArray
+import fftw.FftwDirection
+import fftw.FftwFlag
+import fftw.FftwPlan1D
 import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.app.Application
@@ -10,15 +14,13 @@ import imgui.flag.ImGuiWindowFlags
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
+import me.dvyy.nmr.helpers.memScoped
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.parsing.removeDigitalFilter
 import me.dvyy.nmr.propack.HankelOperator
 import me.dvyy.nmr.propack.propack
 import me.dvyy.nmr.svd.reconstructDiagonals
 import org.apache.commons.math3.complex.Complex
-import org.apache.commons.math3.transform.DftNormalization
-import org.apache.commons.math3.transform.FastFourierTransformer
-import org.apache.commons.math3.transform.TransformType.FORWARD
 import org.jetbrains.bio.viktor.asF64Array
 import java.io.IOException
 import java.nio.file.Files
@@ -57,7 +59,7 @@ class Main : Application() {
         val brukerData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/10")
         val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/5")
         val cleanFid = cleanData.readFid().removeDigitalFilter(brukerData.acqus)
-            .takeComplex(4096)
+            .expApodization(0.00008)
 
 //            .expApodization(0.0005)
         // 1. You can freely inspect text parameters
@@ -67,28 +69,46 @@ class Main : Application() {
         // 2. Load the 1D FID
         val fid = brukerData.readFid()
             .removeDigitalFilter(brukerData.acqus)
-            .takeComplex(4096)
-            .expApodization(0.00008)
-        val hankel = HankelOperator(fid.toMemorySegment())
+//            .expApodization(0.0008)
         val rows = fid.size / 2
         val cols = fid.size - rows + 1
-        val result = propack(hankel, rows, cols, numWanted = 13)
-        println(result.singularValues.toList())
-        val denoised = result.reconstructDiagonals()
+        val denoised = memScoped {
+            val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
+            val result = propack(hankel, rows, cols, numWanted = 15)
+            result.reconstructDiagonals()
+        }
+
+//        println(result.singularValues.toList())
 //        return
 //            fft = fid.map { it.re }.toDoubleArray()
 ////            fidIm = fid.map { it.im }.toDoubleArray()
-//        val denoised = hankelSVD(fid.takeComplex(2048), k = 12)
 ////        val denoised = fid
 //        denoised[0] = denoised[0] / 2
 //            fft = denoised.map { it.re }.toDoubleArray()
-        val fourier = FastFourierTransformer(DftNormalization.UNITARY)
 //        this@Main.fid = fid.real()
-        fft = fourier.transform(cleanFid.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
-        fft.asF64Array().let {  it /= it.max() }
-        fidDenoised = denoised.abs()
-        fftDenoised = fourier.transform(denoised.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
-        fftDenoised.asF64Array().let {  it /= it.max() }
+//        fft = fourier.transform(cleanFid.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
+        val (fftOriginal, fftDenoised) = memScoped {
+            val output = FftwComplexArray(fid.size)
+            val input = FftwComplexArray(fid.size)
+            val plan =
+                FftwPlan1D(fid.size, input.segment, output.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
+
+            fun fft(load: ComplexDoubleArray): DoubleArray {
+                input.loadInterleaved(load.data)
+                plan.execute()
+                return ComplexDoubleArray(output.toInterleavedArray()).fftShift().abs().reversedArray()
+            }
+
+            val clean = fft(cleanFid)
+            val denoised = fft(denoised)
+            clean to denoised
+        }
+        fft = fftOriginal
+        this.fftDenoised = fftDenoised
+//        fidDenoised = denoised.abs()
+//        fftDenoised = fourier.transform(denoised.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
+        fft.asF64Array().let { it /= it.max() }
+        fftDenoised.asF64Array().let { it /= it.max() }
     }
 
     override fun process() {
@@ -149,6 +169,7 @@ fun ComplexDoubleArray.takeComplex(n: Int): ComplexDoubleArray {
 }
 
 fun main() {
+//    Main().init()
     ImPlot.createContext()
     Application.launch(Main())
 }

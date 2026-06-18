@@ -35,6 +35,7 @@ val diagonalAprod = AprodOperator { transpose, rows, cols, x, y, _, _ ->
     }
 }
 
+context(arena: Arena)
 fun propack(
     operator: AprodOperator,
     rows: Int,
@@ -46,107 +47,104 @@ fun propack(
     System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libpropack_common.so")
     System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libzpropack.so") // Loads libzpropack.so
 
-    Arena.ofConfined().use { arena ->
-        val dim = numWanted * 2
+    val dim = numWanted * 2
 
-        // Allocate Matrix Arrays (Sizes based on PROPACK documentation)
-        val uMatrix = arena.allocate(JAVA_DOUBLE, (rows * (dim + 1) * 2L)) // *2 for complex
-        val vMatrix = arena.allocate(JAVA_DOUBLE, (cols * dim * 2L))
-        val sigmaValues = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
-        val errorBounds = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
+    // Allocate Matrix Arrays (Sizes based on PROPACK documentation)
+    val uMatrix = arena.allocate(JAVA_DOUBLE, (rows * (dim + 1) * 2L)) // *2 for complex
+    val vMatrix = arena.allocate(JAVA_DOUBLE, (cols * dim * 2L))
+    val sigmaValues = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
+    val errorBounds = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
 
-        // Allocate Work Arrays
-        val workSize = (rows + cols + 10 * dim + 2 * (dim * dim) + 5 + maxOf(rows, cols, 4 * dim + 4)) + 1000
-        val work = arena.allocate(JAVA_DOUBLE, workSize.toLong())
+    // Allocate Work Arrays
+    val workSize = (rows + cols + 10 * dim + 2 * (dim * dim) + 5 + maxOf(rows, cols, 4 * dim + 4)) + 1000
+    val work = arena.allocate(JAVA_DOUBLE, workSize.toLong())
 
-        val zWorkSize = rows + cols + 1000
-        val zWork = arena.allocate(JAVA_DOUBLE, zWorkSize * 2L) // *2 for complex
+    val zWorkSize = rows + cols + 1000
+    val zWork = arena.allocate(JAVA_DOUBLE, zWorkSize * 2L) // *2 for complex
 
-        val iWorkSize = 2 * dim + 1 + 1000
-        val iWork = arena.allocate(ValueLayout.JAVA_INT, iWorkSize.toLong())
+    val iWorkSize = 2 * dim + 1 + 1000
+    val iWork = arena.allocate(ValueLayout.JAVA_INT, iWorkSize.toLong())
 
-        // Options arrays
-        val dOption = arena.allocate(JAVA_DOUBLE, 4L)
-        val iOption = arena.allocate(ValueLayout.JAVA_INT, 2L)
+    // Options arrays
+    val dOption = arena.allocate(JAVA_DOUBLE, 4L)
+    val iOption = arena.allocate(ValueLayout.JAVA_INT, 2L)
 
-        // Dummy parameters
-        val zParm = arena.allocate(JAVA_DOUBLE, 2L)
-        val iParm = arena.allocate(ValueLayout.JAVA_INT, 1L)
+    // Dummy parameters
+    val zParm = arena.allocate(JAVA_DOUBLE, 2L)
+    val iParm = arena.allocate(ValueLayout.JAVA_INT, 1L)
 
-        // Define your high-performance matrix-vector multiplier
+    // Define your high-performance matrix-vector multiplier
 
-        // Execute the Lanczos SVD
-        val info = PropackZlansvd.compute(
-            arena = arena,
-            target = SingularTripletTarget.LARGEST,
-            computeU = ComputeVectors.YES,
-            computeV = ComputeVectors.YES,
-            mRows = rows,
-            nCols = cols,
-            dim = dim,
-            shiftsPerRestart = 2,
-            numWanted = numWanted,
-            maxRestarts = 1000,
-            aprod = operator,
-            uMatrix = uMatrix,
-            ldu = rows,
-            sigmaValues = sigmaValues,
-            errorBounds = errorBounds,
-            vMatrix = vMatrix,
-            ldv = cols,
-            tolerance = 1e-12,
-            work = work,
-            workSize = workSize,
-            zWork = zWork,
-            zWorkSize = zWorkSize,
-            iWork = iWork,
-            iWorkSize = iWorkSize,
-            dOption = dOption,
-            iOption = iOption,
-            zParm = zParm,
-            iParm = iParm
+    // Execute the Lanczos SVD
+    val info = PropackZlansvd.compute(
+        arena = arena,
+        target = SingularTripletTarget.LARGEST,
+        computeU = ComputeVectors.YES,
+        computeV = ComputeVectors.YES,
+        mRows = rows,
+        nCols = cols,
+        dim = dim,
+        shiftsPerRestart = 2,
+        numWanted = numWanted,
+        maxRestarts = 1000,
+        aprod = operator,
+        uMatrix = uMatrix,
+        ldu = rows,
+        sigmaValues = sigmaValues,
+        errorBounds = errorBounds,
+        vMatrix = vMatrix,
+        ldv = cols,
+        tolerance = 1e-12,
+        work = work,
+        workSize = workSize,
+        zWork = zWork,
+        zWorkSize = zWorkSize,
+        iWork = iWork,
+        iWorkSize = iWorkSize,
+        dOption = dOption,
+        iOption = iOption,
+        zParm = zParm,
+        iParm = iParm
+    )
+
+    if (info == 0) {
+        val singularValues = DoubleArray(numWanted) { i ->
+            sigmaValues.get(JAVA_DOUBLE, i * 8L)
+        }
+        println("Convergence achieved! Singular values: $singularValues")
+
+        val U = ComplexDoubleMatrix(
+            Array(numWanted) { col ->
+                val arr = ComplexDoubleArray(rows)
+                for (row in 0 until rows) {
+                    val offset = (col * rows + row) * 16L
+                    arr[row] = ComplexDouble(
+                        uMatrix[JAVA_DOUBLE, offset],
+                        uMatrix[JAVA_DOUBLE, offset + 8L]
+                    )
+                }
+                arr
+            }
         )
 
-        if (info == 0) {
-            val singularValues = DoubleArray(numWanted) { i ->
-                sigmaValues.get(JAVA_DOUBLE, i * 8L)
+        val V = ComplexDoubleMatrix(
+            Array(numWanted) { col ->
+                val arr = ComplexDoubleArray(cols)
+                for (row in 0 until cols) {
+                    val offset = (col * cols + row) * 16L
+                    arr[row] = ComplexDouble(
+                        vMatrix[JAVA_DOUBLE, offset],
+                        vMatrix[JAVA_DOUBLE, offset + 8L]
+                    )
+                }
+                arr
             }
-            println("Convergence achieved! Singular values: $singularValues")
+        )
 
-            val U = ComplexDoubleMatrix(
-                Array(numWanted) { col ->
-                    val arr = ComplexDoubleArray(rows)
-                    for (row in 0 until rows) {
-                        val offset = (col * rows + row) * 16L
-                        arr[row] = ComplexDouble(
-                            uMatrix[JAVA_DOUBLE, offset],
-                            uMatrix[JAVA_DOUBLE, offset + 8L]
-                        )
-                    }
-                    arr
-                }
-            )
-
-            val V = ComplexDoubleMatrix(
-                Array(numWanted) { col ->
-                    val arr = ComplexDoubleArray(cols)
-                    for (row in 0 until cols) {
-                        val offset = (col * cols + row) * 16L
-                        arr[row] = ComplexDouble(
-                            vMatrix[JAVA_DOUBLE, offset],
-                            vMatrix[JAVA_DOUBLE, offset + 8L]
-                        )
-                    }
-                    arr
-                }
-            )
-
-            return SVDResult(rows, cols, U, singularValues, V)
-        } else {
-            error("Only ${-info} singular triplets converge before exceeding MAXITER iterations.")
-        }
+        return SVDResult(rows, cols, U, singularValues, V)
+    } else {
+        error("Only ${-info} singular triplets converge before exceeding MAXITER iterations.")
     }
-    println("Closed!")
 }
 
 class SVDResult(

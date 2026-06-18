@@ -24,8 +24,8 @@ fun interface AprodOperator {
      * * @param transpose If true, apply the conjugate transpose (adjoint).
      * @param rows Number of rows in A.
      * @param cols Number of columns in A.
-     * @param x Input vector (Complex Double Array).
-     * @param y Output vector (Complex Double Array). MUST MUTATE IN PLACE.
+     * @param input Input vector (Complex Double Array).
+     * @param output Output vector (Complex Double Array). MUST MUTATE IN PLACE.
      * @param zParm Complex double array for passing user data.
      * @param iParm Integer array for passing user data.
      */
@@ -33,8 +33,8 @@ fun interface AprodOperator {
         transpose: Boolean,
         rows: Int,
         cols: Int,
-        x: MemorySegment,
-        y: MemorySegment,
+        input: MemorySegment,
+        output: MemorySegment,
         zParm: MemorySegment,
         iParm: MemorySegment
     )
