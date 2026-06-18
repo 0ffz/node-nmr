@@ -1,4 +1,4 @@
-package me.dvyy.nmr.propack
+package me.dvyy.nmr.bindings.propack
 
 import java.lang.foreign.MemorySegment
 

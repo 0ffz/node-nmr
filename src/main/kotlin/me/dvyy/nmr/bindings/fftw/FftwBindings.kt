@@ -1,6 +1,5 @@
-package fftw
+package me.dvyy.nmr.bindings.fftw
 
-import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.Linker
 import java.lang.foreign.SymbolLookup
@@ -11,8 +10,9 @@ internal object FftwBindings {
     init {
         System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libfftw3.so")
     }
+
     private val linker = Linker.nativeLinker()
-    
+
     // Loads the system-installed fftw3 library. 
     // Ensure "fftw3.dll" (Win), "libfftw3.so" (Linux), or "libfftw3.dylib" (Mac) is in your library path.
 //    private val fftwLib = SymbolLookup.libraryLookup("fftw3", Arena.global())

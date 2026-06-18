@@ -1,9 +1,5 @@
 package me.dvyy.nmr
 
-import fftw.FftwComplexArray
-import fftw.FftwDirection
-import fftw.FftwFlag
-import fftw.FftwPlan1D
 import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.app.Application
@@ -11,40 +7,32 @@ import imgui.app.Configuration
 import imgui.extension.implot.ImPlot
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
-import me.dvyy.nmr.complex.ComplexDouble
+import me.dvyy.nmr.bindings.fftw.FftwComplexArray
+import me.dvyy.nmr.bindings.fftw.FftwDirection
+import me.dvyy.nmr.bindings.fftw.FftwFlag
+import me.dvyy.nmr.bindings.fftw.FftwPlan1D
+import me.dvyy.nmr.bindings.helpers.memScoped
+import me.dvyy.nmr.bindings.propack.propack
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.complex.toComplexArray
-import me.dvyy.nmr.helpers.memScoped
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.parsing.removeDigitalFilter
-import me.dvyy.nmr.propack.HankelOperator
-import me.dvyy.nmr.propack.propack
+import me.dvyy.nmr.signal.expApodization
+import me.dvyy.nmr.signal.fftShift
+import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.reconstructDiagonals
-import org.apache.commons.math3.complex.Complex
 import org.jetbrains.bio.viktor.asF64Array
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
-import kotlin.math.exp
 
 class Main : Application() {
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
-
-        val io = ImGui.getIO();
-
-//        io.fonts.setFreeTypeRenderer(true);
-        io.iniFilename = null;                                // We don't want to save .ini file
+        val io = ImGui.getIO()
+        io.iniFilename = null                                // We don't want to save .ini file
         io.fonts.setFreeTypeRenderer(true)
         io.fonts.addFontFromMemoryTTF(loadFromResources("/NotoSans.ttf"), 24f, ImFontConfig())
         io.fonts.build()
-        io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard);  // Enable Keyboard Controls
-        io.addConfigFlags(ImGuiConfigFlags.DockingEnable);      // Enable Docking
-        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
-//        io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard);  // Enable Keyboard Controls
-//        io.addConfigFlags(ImGuiConfigFlags.DockingEnable);      // Enable Docking
-//        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);    // Enable Multi-Viewport / Platform Windows
-//        io.configViewportsNoTaskBarIcon = true;
+        io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)  // Enable Keyboard Controls
+        io.addConfigFlags(ImGuiConfigFlags.DockingEnable)      // Enable Docking
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
         init()
 
     }
@@ -77,21 +65,10 @@ class Main : Application() {
             val result = propack(hankel, rows, cols, numWanted = 15)
             result.reconstructDiagonals()
         }
-
-//        println(result.singularValues.toList())
-//        return
-//            fft = fid.map { it.re }.toDoubleArray()
-////            fidIm = fid.map { it.im }.toDoubleArray()
-////        val denoised = fid
-//        denoised[0] = denoised[0] / 2
-//            fft = denoised.map { it.re }.toDoubleArray()
-//        this@Main.fid = fid.real()
-//        fft = fourier.transform(cleanFid.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
         val (fftOriginal, fftDenoised) = memScoped {
-            val output = FftwComplexArray(fid.size)
-            val input = FftwComplexArray(fid.size)
-            val plan =
-                FftwPlan1D(fid.size, input.segment, output.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
+            val output = FftwComplexArray.alloc(fid.size)
+            val input = FftwComplexArray.alloc(fid.size)
+            val plan = FftwPlan1D(fid.size, input.segment, output.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
 
             fun fft(load: ComplexDoubleArray): DoubleArray {
                 input.loadInterleaved(load.data)
@@ -105,8 +82,6 @@ class Main : Application() {
         }
         fft = fftOriginal
         this.fftDenoised = fftDenoised
-//        fidDenoised = denoised.abs()
-//        fftDenoised = fourier.transform(denoised.toApache(), FORWARD).toKotlin().fftShift().abs().reversedArray()
         fft.asF64Array().let { it /= it.max() }
         fftDenoised.asF64Array().let { it /= it.max() }
     }
@@ -128,48 +103,9 @@ class Main : Application() {
         ImGui.end()
     }
 
-    private fun loadFromResources(name: String): ByteArray {
-        try {
-            val resource = Main::class.java.getResource(name) ?: throw IOException("Resource not found: $name")
-            return Files.readAllBytes(Paths.get(resource.toURI()))
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
-    }
-}
-//
-//fun ComplexDoubleArray.toOjalgo(): Array1D<ComplexNumber> = Array1D.C128.make(size).also { arr ->
-//    forEachIndexed { index, complex -> arr[index] = ComplexNumber.of(complex.re, complex.im) }
-//}
-
-fun ComplexDoubleArray.fftShift(): ComplexDoubleArray {
-    val n = this.size
-    val half = n / 2
-    val shifted = ComplexDoubleArray(n)
-
-    var index = 0
-    // Move the second half to the front, and the first half to the back
-    for (i in half until n) shifted[index++] = this[i]
-    for (i in 0 until half) shifted[index++] = this[i]
-
-    return shifted
-}
-
-fun ComplexDoubleArray.toApache() = Array(size) { Complex(this[it].re, this[it].im) }
-fun Array<Complex>.toKotlin() = ComplexDoubleArray(size) { ComplexDouble(this[it].real, this[it].imaginary) }
-fun ComplexDoubleArray.expApodization(lb: Double): ComplexDoubleArray {
-    return this.mapIndexed { index, complex ->
-        val decay = exp(-Math.PI * lb * index)
-        ComplexDouble(complex.re * decay, complex.im * decay)
-    }.toComplexArray()
-}
-
-fun ComplexDoubleArray.takeComplex(n: Int): ComplexDoubleArray {
-    return ComplexDoubleArray(n) { this[it] }
 }
 
 fun main() {
-//    Main().init()
     ImPlot.createContext()
     Application.launch(Main())
 }

@@ -1,21 +1,21 @@
-package fftw
+package me.dvyy.nmr.bindings.fftw
 
+import me.dvyy.nmr.bindings.fftw.FftwComplexArray.Companion.alloc
+import me.dvyy.nmr.bindings.helpers.Sizes
+import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
-
-data class ComplexNumber(val real: Double, val imag: Double) {
-}
 
 /**
  * A native memory wrapper for `fftw_complex*` (a C array of `double[2]`).
  * Must be closed to free native memory.
  */
-class FftwComplexArray(val size: Int) : AutoCloseable {
-    // 2 doubles (8 bytes each) = 16 bytes per complex number
-    private val byteSize = size * 16L
-
-    val segment: MemorySegment = (FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize)
+class FftwComplexArray(
+    val segment: MemorySegment,
+    val size: Int,
+) : AutoCloseable {
 
     init {
         if (segment == MemorySegment.NULL) {
@@ -32,12 +32,12 @@ class FftwComplexArray(val size: Int) : AutoCloseable {
     }
 
     /** Gets the complex number at a specific index. */
-    fun get(index: Int): ComplexNumber {
+    fun get(index: Int): ComplexDouble {
         require(index in 0 until size) { "Index out of bounds" }
         val offset = index * 16L
         val real = segment.get(ValueLayout.JAVA_DOUBLE, offset)
         val imag = segment.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
-        return ComplexNumber(real, imag)
+        return ComplexDouble(real, imag)
     }
 
     /** Populates the native memory using an interleaved double array (real, imag, real, imag...). */
@@ -60,10 +60,16 @@ class FftwComplexArray(val size: Int) : AutoCloseable {
     }
 
     companion object {
-        //FIXME context arena
-        fun ComplexDoubleArray.toFFTWArray(): FftwComplexArray = FftwComplexArray(size).apply {
-            loadInterleaved(this@toFFTWArray.data)
-            return this
+        context(arena: Arena)
+        fun alloc(size: Int): FftwComplexArray {
+            val byteSize = size * Sizes.COMPLEX
+            return FftwComplexArray((FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize), size)
         }
     }
+}
+
+context(arena: Arena)
+fun ComplexDoubleArray.toFFTWArray(): FftwComplexArray = alloc(size).apply {
+    loadInterleaved(this@toFFTWArray.data)
+    return this
 }

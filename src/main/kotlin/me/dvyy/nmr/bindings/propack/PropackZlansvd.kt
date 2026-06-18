@@ -1,8 +1,8 @@
 package me.dvyy.nmr.propack
 
-import fftw.FftwDirection
-import fftw.FftwFlag
-import fftw.FftwPlan1D
+import me.dvyy.nmr.bindings.propack.AprodOperator
+import me.dvyy.nmr.bindings.propack.ComputeVectors
+import me.dvyy.nmr.bindings.propack.SingularTripletTarget
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType

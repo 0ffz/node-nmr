@@ -1,4 +1,4 @@
-package fftw
+package me.dvyy.nmr.bindings.fftw
 
 /** Direction of the FFT transform. */
 enum class FftwDirection(val value: Int) {

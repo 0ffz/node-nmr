@@ -1,4 +1,4 @@
-package fftw
+package me.dvyy.nmr.bindings.fftw
 
 import java.lang.foreign.MemorySegment
 
@@ -8,22 +8,16 @@ import java.lang.foreign.MemorySegment
  */
 class FftwPlan1D(
     val size: Int,
-    val inArray: MemorySegment,
-    val outArray: MemorySegment,
+    inArray: MemorySegment,
+    outArray: MemorySegment,
     direction: FftwDirection,
     flags: Int = FftwFlag.ESTIMATE.value
 ) : AutoCloseable {
-
-    private val planPointer: MemorySegment = FftwBindings.planDft1d.invokeExact(
-        size,
-        inArray,
-        outArray,
-        direction.value,
-        flags
-    ) as MemorySegment
+    private val planPointer: MemorySegment = FftwBindings
+        .planDft1d
+        .invokeExact(size, inArray, outArray, direction.value, flags) as MemorySegment
 
     init {
-
         if (planPointer == MemorySegment.NULL) {
             throw RuntimeException("Failed to create FFTW plan.")
         }

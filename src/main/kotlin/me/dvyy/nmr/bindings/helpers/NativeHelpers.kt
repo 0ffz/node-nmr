@@ -1,4 +1,4 @@
-package me.dvyy.nmr.helpers
+package me.dvyy.nmr.bindings.helpers
 
 import java.lang.foreign.Arena
 

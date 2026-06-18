@@ -1,29 +1,28 @@
 package me.dvyy.nmr.svd
 
-import fftw.FftwComplexArray
-import fftw.FftwDirection
-import fftw.FftwFlag
-import fftw.FftwPlan1D
+import me.dvyy.nmr.bindings.fftw.FftwComplexArray
+import me.dvyy.nmr.bindings.fftw.FftwDirection
+import me.dvyy.nmr.bindings.fftw.FftwFlag
+import me.dvyy.nmr.bindings.fftw.FftwPlan1D
+import me.dvyy.nmr.bindings.propack.SVDResult
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.propack.MathHelpers
-import me.dvyy.nmr.propack.SVDResult
-import me.dvyy.nmr.propack.Sizes
 import java.lang.foreign.Arena
 
 context(arena: Arena)
-fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {val numDiagonals = rows + cols - 1
+fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {
+    val numDiagonals = rows + cols - 1
     val size = MathHelpers.nextPowerOfTwo(numDiagonals)
 
     // 1. Allocate Workspaces Once
     // Note: arena.allocate() guarantees zero-initialized memory in Java FFM.
-    val uTime = FftwComplexArray(size)
-    val uFreq = FftwComplexArray(size)
-    val vTime = FftwComplexArray(size)
-    val vFreq = FftwComplexArray(size)
+    val uTime = FftwComplexArray.alloc(size)
+    val uFreq = FftwComplexArray.alloc(size)
+    val vTime = FftwComplexArray.alloc(size)
+    val vFreq = FftwComplexArray.alloc(size)
 
-    val accumFreq = FftwComplexArray(size)
-    val resultTime = FftwComplexArray(size)
+    val accumFreq = FftwComplexArray.alloc(size)
+    val resultTime = FftwComplexArray.alloc(size)
 
     // 2. Create Plans (FftwFlag.ESTIMATE is safe to use before populating data)
     val planU = FftwPlan1D(size, uTime.segment, uFreq.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
@@ -66,7 +65,7 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {val numDiagonals = row
             val multIm = uRe * vIm + uIm * vRe
 
             // Accumulate
-            accumFreq.set(j, accumFreq.get(j).real + multRe * sigma, accumFreq.get(j).imag + multIm * sigma)
+            accumFreq.set(j, accumFreq.get(j).re + multRe * sigma, accumFreq.get(j).im + multIm * sigma)
         }
     }
 
@@ -85,8 +84,8 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {val numDiagonals = row
         // We divide by 'size' for IFFT normalization, AND by 'count' to average the anti-diagonal.
         val normFactor = size.toDouble() * count.toDouble()
 
-        val re = resultTime.get(diagonal).real / normFactor
-        val im = resultTime.get(diagonal).imag / normFactor
+        val re = resultTime.get(diagonal).re / normFactor
+        val im = resultTime.get(diagonal).im / normFactor
 
         reconstructedArray[diagonal] = ComplexDouble(re, im)
     }
@@ -100,49 +99,3 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {val numDiagonals = row
     return reconstructedArray
 }
 
-/**
- * sum on anti-diagonals
- * [ 1, 2, 3 ]
- * [ 4, 5, 6 ]
- * [ 7, 8, 9 ]
- * => [1, 4 + 2, 7 + 5 + 3, 8 + 6, 9]
- */
-fun SVDResult.reconstructDiagonalsSlow(): ComplexDoubleArray {
-//    val sizeU = u.rows
-//    val sizeV = v.rows
-    val numDiagonals = rows + cols - 1
-    val reconstructedArray = ComplexDoubleArray(numDiagonals)
-
-    for (diagonal in 0 until numDiagonals) {
-        val rStart = (diagonal - cols + 1).coerceAtLeast(0)
-        val rEnd = diagonal.coerceAtMost(rows - 1)
-        // The number of elements on this specific anti-diagonal
-        val count = rEnd - rStart + 1
-
-        var diagonalSum = ComplexDouble.zero
-
-        // Compute the contribution of each eigenvector to this diagonal
-        for (i in singularValues.indices) {
-            val sigma = singularValues[i]
-            val vectorU = u[i]
-            val vectorV = v[i]
-            var eigenProductSum = ComplexDouble.zero
-
-            // reconstruct by taking outer product, for [a,b,c], on the 2th diagonal looks like:
-            // [ aa,  ab , {ac}]
-            // [ ba, {bb},  bc ]
-            // [{ca}, cb ,  cc ]
-            // Which summing is ca * bb * ac
-            // which is (a, b, c) dot (c, b, a)
-            for (row in rStart..rEnd) {
-                eigenProductSum += vectorU[row] * vectorV[diagonal - row].conjugate() // we use transpose conjugate
-            }
-
-            diagonalSum += eigenProductSum * sigma
-        }
-
-        // Average it out immediately
-        reconstructedArray[diagonal] = diagonalSum / count.toDouble()
-    }
-    return reconstructedArray
-}
