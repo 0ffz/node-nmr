@@ -1,5 +1,6 @@
 package me.dvyy.nmr.svd
 
+import me.dvyy.nmr.bindings.fftw.FftwComplexArray
 import me.dvyy.nmr.bindings.fftw.FftwDirection
 import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
@@ -27,12 +28,12 @@ class HankelOperator(
     private val nFft = MathHelpers.nextPowerOfTwo(targetLen)
 
     // 2. Pre-allocate dedicated buffers for FFT operations to avoid allocations during multiply()
-    private val fftIn = arena.allocate(nFft * Sizes.COMPLEX)
-    private val fftOut = arena.allocate(nFft * Sizes.COMPLEX)
+    private val fftIn = with(arena) { FftwComplexArray.alloc(nFft) }
+    private val fftOut = with(arena) { FftwComplexArray.alloc(nFft) }
 
     // 3. Pre-computed FFTs of the defining vector
-    private val fidFft = arena.allocate(nFft * Sizes.COMPLEX)
-    private val fidConjFft = arena.allocate(nFft * Sizes.COMPLEX)
+    private val fidFft = with(arena) { FftwComplexArray.alloc(nFft) }
+    private val fidConjFft = with(arena) { FftwComplexArray.alloc(nFft) }
 
     // 4. Reusable forward and backward transform plans using the pre-allocated buffers
     private val planForward = FftwPlan1D(nFft, fftIn, fftOut, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
@@ -45,51 +46,44 @@ class HankelOperator(
         }
 
         // PRECOMPUTE: FFT(fid)
-        fftIn.fill(0.toByte()) // Zero-pad the rest of the array
-        fftIn.asSlice(0L, requiredBytes).copyFrom(hankelData.asSlice(0L, requiredBytes))
+        fftIn.segment.fill(0.toByte()) // Zero-pad the rest of the array
+        fftIn.segment.asSlice(0L, requiredBytes).copyFrom(hankelData.asSlice(0L, requiredBytes))
         planForward.execute()
-        fidFft.copyFrom(fftOut)
+        fidFft.segment.copyFrom(fftOut.segment)
 
         // PRECOMPUTE: FFT(conj(fid))
-        fftIn.fill(0.toByte())
+        fftIn.segment.fill(0.toByte())
         for (i in 0 until targetLen) {
             val offset = i * Sizes.COMPLEX
             val real = hankelData.get(ValueLayout.JAVA_DOUBLE, offset)
             val imag = hankelData.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset, real)
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset + 8L, -imag) // Complex conjugate
+            fftIn.segment.set(ValueLayout.JAVA_DOUBLE, offset, real)
+            fftIn.segment.set(ValueLayout.JAVA_DOUBLE, offset + 8L, -imag) // Complex conjugate
         }
         planForward.execute()
-        fidConjFft.copyFrom(fftOut)
+        fidConjFft.segment.copyFrom(fftOut.segment)
     }
 
     override fun multiply(
         transpose: Boolean,
-        rows: Int,
-        cols: Int,
+        inputLength: Int,
+        outputLength: Int,
         input: MemorySegment,
         output: MemorySegment,
         zParm: MemorySegment,
         iParm: MemorySegment,
     ) {
-        val outLen = if (transpose) cols else rows
-        val inLen = if (transpose) rows else cols
-
-        val x = input.reinterpret(inLen * Sizes.COMPLEX)
-        val y = output.reinterpret(outLen * Sizes.COMPLEX)
-
         // Slicing offset identical to cols - 1 or rows - 1 based on translation logic
-        val validStart = inLen - 1
+        val validStart = inputLength - 1
         val precomputedFftData = if (transpose) fidConjFft else fidFft
 
         // 1. Prepare input: Copy conj(input) padded with zeros up to nFft
-        fftIn.fill(0.toByte())
-        for (i in 0 until inLen) {
+        fftIn.segment.fill(0.toByte())
+        for (i in 0 until inputLength) {
             val offset = i * Sizes.COMPLEX
-            val real = x.get(ValueLayout.JAVA_DOUBLE, offset)
-            val imag = x.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset, real)
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset + 8L, -imag) // Conjugate
+            val real = input.get(ValueLayout.JAVA_DOUBLE, offset)
+            val imag = input.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
+            fftIn.set(i, real, -imag) // Conjugate
         }
 
         // 2. Compute FFT of conj(input) -> Output placed in `fftOut`
@@ -98,21 +92,18 @@ class HankelOperator(
         // 3. Multiply precomputed FFT by conj(FFT(input)) directly in the frequency domain
         //    (Placing the result back into `fftIn` ready for the IFFT step)
         for (i in 0 until nFft) {
-            val offset = i * Sizes.COMPLEX
+            val aReal = precomputedFftData.getReal(i)
+            val aImag = precomputedFftData.getImag(i)
 
-            val aReal = precomputedFftData.get(ValueLayout.JAVA_DOUBLE, offset)
-            val aImag = precomputedFftData.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
-
-            val vReal = fftOut.get(ValueLayout.JAVA_DOUBLE, offset)
-            val vImag = fftOut.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
+            val vReal = fftOut.getReal(i)
+            val vImag = fftOut.getImag(i)
 
             // Evaluate c = a * conj(v).
             // Expanding algebraically maps directly to this:
             val cReal = (aReal * vReal) + (aImag * vImag)
             val cImag = (aImag * vReal) - (aReal * vImag)
 
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset, cReal)
-            fftIn.set(ValueLayout.JAVA_DOUBLE, offset + 8L, cImag)
+            fftIn.set(i, cReal, cImag)
         }
 
         // 4. Compute IFFT -> Output placed back in `fftOut`
@@ -121,15 +112,15 @@ class HankelOperator(
         // 5. Slice the valid window block and normalize
         //    (Unlike scipy.fft.ifft, FFTW unscaled backward needs manual dividing by N)
         val scale = 1.0 / nFft
-        for (i in 0 until outLen) {
-            val outOffset = i * Sizes.COMPLEX
-            val inOffset = (validStart + i) * Sizes.COMPLEX
+        for (i in 0 until outputLength) {
+            val outOffset = i
+            val inOffset = (validStart + i)
 
-            val real = fftOut.get(ValueLayout.JAVA_DOUBLE, inOffset) * scale
-            val imag = fftOut.get(ValueLayout.JAVA_DOUBLE, inOffset + 8L) * scale
+            val real = fftOut.getReal(inOffset) * scale
+            val imag = fftOut.getImag(inOffset) * scale
 
-            y.set(ValueLayout.JAVA_DOUBLE, outOffset, real)
-            y.set(ValueLayout.JAVA_DOUBLE, outOffset + 8L, imag)
+            output.set(ValueLayout.JAVA_DOUBLE, outOffset * Sizes.COMPLEX, real)
+            output.set(ValueLayout.JAVA_DOUBLE, outOffset * Sizes.COMPLEX + 8L, imag)
         }
     }
 

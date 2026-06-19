@@ -2,13 +2,9 @@ package me.dvyy.nmr.bindings.propack
 
 import java.lang.foreign.ValueLayout
 
-val diagonalAprod = AprodOperator { transpose, rows, cols, x, y, _, _ ->
-    // 1. Calculate how many elements we expect based on the transpose flag
-    val xElements = if (transpose) rows else cols
-    val yElements = if (transpose) cols else rows
-
+val diagonalAprod = AprodOperator { _, _, outputLength, x, y, _, _ ->
     // For a square diagonal matrix, we just iterate up to the output size
-    for (i in 0 until yElements) {
+    for (i in 0 until outputLength) {
         val diagValue = (i + 1).toDouble()
 
         val offsetReal = i * 16L

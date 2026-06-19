@@ -25,9 +25,9 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {
     val resultTime = FftwComplexArray.alloc(size)
 
     // 2. Create Plans (FftwFlag.ESTIMATE is safe to use before populating data)
-    val planU = FftwPlan1D(size, uTime.segment, uFreq.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
-    val planV = FftwPlan1D(size, vTime.segment, vFreq.segment, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
-    val planIfft = FftwPlan1D(size, accumFreq.segment, resultTime.segment, FftwDirection.BACKWARD, FftwFlag.ESTIMATE.value)
+    val planU = FftwPlan1D(size, uTime, uFreq, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
+    val planV = FftwPlan1D(size, vTime, vFreq, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
+    val planIfft = FftwPlan1D(size, accumFreq, resultTime, FftwDirection.BACKWARD, FftwFlag.ESTIMATE.value)
 
     // 3. Process Each Singular Component into the Accumulator
     for (i in singularValues.indices) {

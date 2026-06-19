@@ -40,6 +40,9 @@ class FftwComplexArray(
         return ComplexDouble(real, imag)
     }
 
+    fun getReal(index:Int): Double =  segment.get(ValueLayout.JAVA_DOUBLE, index * 16L)
+    fun getImag(index:Int): Double =  segment.get(ValueLayout.JAVA_DOUBLE, index * 16L + 8L)
+
     /** Populates the native memory using an interleaved double array (real, imag, real, imag...). */
     fun loadInterleaved(data: DoubleArray) {
 //        require(data.size == size * 2) { "Data array must be exactly twice the size of the complex array." }
@@ -51,6 +54,20 @@ class FftwComplexArray(
         val out = DoubleArray(size * 2)
         MemorySegment.copy(segment, ValueLayout.JAVA_DOUBLE, 0, out, 0, out.size)
         return out
+    }
+
+    fun copyFrom(other: FftwComplexArray) {
+        if (this.size > other.size) segment.fill(0)
+        segment.copyFrom(other.segment)
+    }
+
+    fun copyFromAsConjugate(other: FftwComplexArray) {
+        if (this.size > other.size) segment.fill(0)
+        for (i in 0 until other.size) {
+            val real = other.getReal(i)
+            val imag = other.getImag(i)
+            set(i, real, -imag) // Complex conjugate
+        }
     }
 
     override fun close() {

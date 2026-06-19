@@ -8,14 +8,14 @@ import java.lang.foreign.MemorySegment
  */
 class FftwPlan1D(
     val size: Int,
-    inArray: MemorySegment,
-    outArray: MemorySegment,
+    inArray: FftwComplexArray,
+    outArray: FftwComplexArray,
     direction: FftwDirection,
     flags: Int = FftwFlag.ESTIMATE.value
 ) : AutoCloseable {
     private val planPointer: MemorySegment = FftwBindings
         .planDft1d
-        .invokeExact(size, inArray, outArray, direction.value, flags) as MemorySegment
+        .invokeExact(size, inArray.segment, outArray.segment, direction.value, flags) as MemorySegment
 
     init {
         if (planPointer == MemorySegment.NULL) {

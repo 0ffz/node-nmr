@@ -10,30 +10,26 @@ import java.lang.foreign.ValueLayout
 class HankelOperatorBruteForce(private val hankelData: MemorySegment) : AprodOperator {
     override fun multiply(
         transpose: Boolean,
-        rows: Int,
-        cols: Int,
+        inputLength: Int,
+        outputLength: Int,
         input: MemorySegment,
         output: MemorySegment,
         zParm: MemorySegment,
         iParm: MemorySegment,
     ) {
-        // 1. Determine sizes based on the direction of the multiplication
-        val outLen = if (transpose) cols else rows
-        val inLen = if (transpose) rows else cols
-
         // (Optional but recommended) Safety check to ensure hankelData is large enough
         // We need elements up to index (rows + cols - 2). So size must be (rows + cols - 1).
-        val requiredBytes = (rows + cols - 1) * 16L
+        val requiredBytes = (inputLength + outputLength - 1) * 16L
         if (hankelData.byteSize() < requiredBytes) {
             throw IllegalArgumentException("Hankel data segment is too small! Needs $requiredBytes bytes.")
         }
 
         // 3. Perform the matrix-vector multiplication Y = A*X or Y = A^H*X
-        for (i in 0 until outLen) {
+        for (i in 0 until outputLength) {
             var yReal = 0.0
             var yImag = 0.0
 
-            for (j in 0 until inLen) {
+            for (j in 0 until inputLength) {
                 // For a Hankel matrix, the value at (row, col) is v[row + col].
                 // If not transposed: row = i, col = j.
                 // If transposed: row = j, col = i.

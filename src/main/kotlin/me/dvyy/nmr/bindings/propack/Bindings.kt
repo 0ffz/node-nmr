@@ -22,8 +22,8 @@ fun interface AprodOperator {
     /**
      * Computes Y = A * X (if transpose is false) or Y = A^H * X (if transpose is true).
      * * @param transpose If true, apply the conjugate transpose (adjoint).
-     * @param rows Number of rows in A.
-     * @param cols Number of columns in A.
+     * @param inputLength Number of rows in A.
+     * @param outputLength Number of columns in A.
      * @param input Input vector (Complex Double Array).
      * @param output Output vector (Complex Double Array). MUST MUTATE IN PLACE.
      * @param zParm Complex double array for passing user data.
@@ -31,8 +31,8 @@ fun interface AprodOperator {
      */
     fun multiply(
         transpose: Boolean,
-        rows: Int,
-        cols: Int,
+        inputLength: Int,
+        outputLength: Int,
         input: MemorySegment,
         output: MemorySegment,
         zParm: MemorySegment,

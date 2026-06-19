@@ -1,29 +1,33 @@
 package me.dvyy.nmr.ui.graphs
 
 import imgui.ImGui.*
-import imgui.extension.implot.ImPlot.*
 import imgui.flag.ImGuiWindowFlags
+import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.bindings.imgui.implotSpec
 
-fun GraphScreen(graphs: List<SpectrumUiState>) {
+fun ImGuiKt.GraphScreen(graphs: List<SpectrumUiState>) {
     val viewport = getMainViewport()
     setNextWindowPos(viewport.posX, viewport.posY)
     setNextWindowSize(viewport.sizeX, viewport.sizeY)
 
-
-    if (begin("Graphs", ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoResize)) {
-        val height = getContentRegionAvailY() / 2f
-        if (beginPlot("Spectra", getContentRegionAvailX(), height)) {
-            graphs.forEach { spectrum ->
-                plotLine(spectrum.name, spectrum.spectrum)
+    window("Graphs", ImGuiWindowFlags.NoDecoration) {
+        subplots("##ItemSharing", rows = 2, cols = 1) {
+            plot("Spectra") {
+                graphs.forEach { spectrum ->
+                    val spec = implotSpec {
+                        if (spectrum.color != null) lineColor = spectrum.color
+                    }
+                    line(spectrum.name, spectrum.spectrum, spec = spec)
+                }
+            }
+            plot("FFT") {
+                graphs.forEach { spectrum ->
+                    val spec = implotSpec {
+                        if (spectrum.color != null) lineColor = spectrum.color
+                    }
+                    line(spectrum.name, spectrum.fft, spec = spec)
+                }
             }
         }
-        endPlot()
-        if (beginPlot("FFT", getContentRegionAvailX(), height)) {
-            graphs.forEach { spectrum ->
-                plotLine(spectrum.name, spectrum.fft)
-            }
-        }
-        endPlot()
     }
-    end()
 }

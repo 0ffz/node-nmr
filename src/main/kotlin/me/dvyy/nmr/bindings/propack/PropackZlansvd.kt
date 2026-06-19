@@ -1,5 +1,6 @@
 package me.dvyy.nmr.propack
 
+import me.dvyy.nmr.bindings.helpers.Sizes
 import me.dvyy.nmr.bindings.propack.AprodOperator
 import me.dvyy.nmr.bindings.propack.ComputeVectors
 import me.dvyy.nmr.bindings.propack.SingularTripletTarget
@@ -251,10 +252,10 @@ object PropackZlansvd {
             val inSize = if (transpose) m else n
             val outSize = if (transpose) n else m
 
-            val xInput = pX.reinterpret(inSize * 16L)
-            val yOutput = pY.reinterpret(outSize * 16L)
+            val xInput = pX.reinterpret(inSize * Sizes.COMPLEX)
+            val yOutput = pY.reinterpret(outSize * Sizes.COMPLEX)
 
-            op.multiply(transpose, m, n, xInput, yOutput, pZparm, pIparm)
+            op.multiply(transpose, inSize, outSize, xInput, yOutput, pZparm, pIparm)
         }
     }
 }
