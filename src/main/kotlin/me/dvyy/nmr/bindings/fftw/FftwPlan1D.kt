@@ -11,11 +11,12 @@ class FftwPlan1D(
     inArray: FftwComplexArray,
     outArray: FftwComplexArray,
     direction: FftwDirection,
-    flags: Int = FftwFlag.ESTIMATE.value
+    vararg flags: FftwFlag = arrayOf(FftwFlag.ESTIMATE)
 ) : AutoCloseable {
+    private val flattenedFlags = flags.fold(0) { acc, flag -> acc or flag.value }
     private val planPointer: MemorySegment = FftwBindings
         .planDft1d
-        .invokeExact(size, inArray.segment, outArray.segment, direction.value, flags) as MemorySegment
+        .invokeExact(size, inArray.segment, outArray.segment, direction.value, flattenedFlags) as MemorySegment
 
     init {
         if (planPointer == MemorySegment.NULL) {

@@ -1,7 +1,8 @@
 package me.dvyy.nmr.svd
 
 import me.dvyy.nmr.bindings.fftw.FftwComplexArray
-import me.dvyy.nmr.bindings.fftw.FftwDirection
+import me.dvyy.nmr.bindings.fftw.FftwDirection.BACKWARD
+import me.dvyy.nmr.bindings.fftw.FftwDirection.FORWARD
 import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.Sizes
@@ -25,19 +26,19 @@ class HankelOperator(
 
     // 1. Calculate length and optimal padding length (next power of 2 for maximum FFT efficiency)
     private val targetLen = rows + cols - 1
-    private val nFft = MathHelpers.nextPowerOfTwo(targetLen)
+    private val fftLength = MathHelpers.nextPowerOfTwo(targetLen)
 
     // 2. Pre-allocate dedicated buffers for FFT operations to avoid allocations during multiply()
-    private val fftIn = with(arena) { FftwComplexArray.alloc(nFft) }
-    private val fftOut = with(arena) { FftwComplexArray.alloc(nFft) }
+    private val fftIn = with(arena) { FftwComplexArray.alloc(fftLength) }
+    private val fftOut = with(arena) { FftwComplexArray.alloc(fftLength) }
 
     // 3. Pre-computed FFTs of the defining vector
-    private val fidFft = with(arena) { FftwComplexArray.alloc(nFft) }
-    private val fidConjFft = with(arena) { FftwComplexArray.alloc(nFft) }
+    private val fidFft = with(arena) { FftwComplexArray.alloc(fftLength) }
+    private val fidConjFft = with(arena) { FftwComplexArray.alloc(fftLength) }
 
     // 4. Reusable forward and backward transform plans using the pre-allocated buffers
-    private val planForward = FftwPlan1D(nFft, fftIn, fftOut, FftwDirection.FORWARD, FftwFlag.ESTIMATE.value)
-    private val planBackward = FftwPlan1D(nFft, fftIn, fftOut, FftwDirection.BACKWARD, FftwFlag.ESTIMATE.value)
+    private val planForward = FftwPlan1D(fftLength, fftIn, fftOut, FORWARD, FftwFlag.ESTIMATE)
+    private val planBackward = FftwPlan1D(fftLength, fftIn, fftOut, BACKWARD, FftwFlag.ESTIMATE)
 
     init {
         val requiredBytes = targetLen * Sizes.COMPLEX
@@ -76,51 +77,45 @@ class HankelOperator(
         // Slicing offset identical to cols - 1 or rows - 1 based on translation logic
         val validStart = inputLength - 1
         val precomputedFftData = if (transpose) fidConjFft else fidFft
+        val input = FftwComplexArray(input)
+        val output = FftwComplexArray(output)
 
-        // 1. Prepare input: Copy conj(input) padded with zeros up to nFft
+        // Copy input as reversed into fftIn, with end padding being 0s (we want a power of 2 length for a faster fft)
         fftIn.segment.fill(0.toByte())
         for (i in 0 until inputLength) {
-            val offset = i * Sizes.COMPLEX
-            val real = input.get(ValueLayout.JAVA_DOUBLE, offset)
-            val imag = input.get(ValueLayout.JAVA_DOUBLE, offset + 8L)
-            fftIn.set(i, real, -imag) // Conjugate
+            val real = input.getReal(i)
+            val imag = input.getImag(i)
+            fftIn.set(inputLength - i - 1, real, imag) // Conjugate
         }
+        planForward.execute() // calculate fft to fftOut
 
-        // 2. Compute FFT of conj(input) -> Output placed in `fftOut`
-        planForward.execute()
-
-        // 3. Multiply precomputed FFT by conj(FFT(input)) directly in the frequency domain
-        //    (Placing the result back into `fftIn` ready for the IFFT step)
-        for (i in 0 until nFft) {
+        // Multiply fftOut and precomputed, write result to fftIn
+        for (i in 0 until fftLength) {
             val aReal = precomputedFftData.getReal(i)
             val aImag = precomputedFftData.getImag(i)
 
             val vReal = fftOut.getReal(i)
             val vImag = fftOut.getImag(i)
 
-            // Evaluate c = a * conj(v).
-            // Expanding algebraically maps directly to this:
-            val cReal = (aReal * vReal) + (aImag * vImag)
-            val cImag = (aImag * vReal) - (aReal * vImag)
+            // Evaluate c = a * v
+            val cReal = aReal * vReal - aImag * vImag
+            val cImag = aReal * vImag + aImag * vReal
 
             fftIn.set(i, cReal, cImag)
         }
 
-        // 4. Compute IFFT -> Output placed back in `fftOut`
+        // Compute inverse fft on fftIn, writes to fftOut
         planBackward.execute()
 
-        // 5. Slice the valid window block and normalize
-        //    (Unlike scipy.fft.ifft, FFTW unscaled backward needs manual dividing by N)
-        val scale = 1.0 / nFft
+        // Extract target window, scale back since FFTW is unscaled
+        val scale = 1.0 / fftLength
         for (i in 0 until outputLength) {
-            val outOffset = i
-            val inOffset = (validStart + i)
+            val inOffset = validStart + i
 
             val real = fftOut.getReal(inOffset) * scale
             val imag = fftOut.getImag(inOffset) * scale
 
-            output.set(ValueLayout.JAVA_DOUBLE, outOffset * Sizes.COMPLEX, real)
-            output.set(ValueLayout.JAVA_DOUBLE, outOffset * Sizes.COMPLEX + 8L, imag)
+            output.set(i, real, imag)
         }
     }
 

@@ -12,10 +12,11 @@ import java.lang.foreign.ValueLayout
  * A native memory wrapper for `fftw_complex*` (a C array of `double[2]`).
  * Must be closed to free native memory.
  */
-class FftwComplexArray(
+@JvmInline
+value class FftwComplexArray(
     val segment: MemorySegment,
-    val size: Int,
 ) : AutoCloseable {
+    val size: Int get() = (segment.byteSize() / Sizes.COMPLEX).toInt()
 
     init {
         if (segment == MemorySegment.NULL) {
@@ -80,7 +81,7 @@ class FftwComplexArray(
         context(arena: Arena)
         fun alloc(size: Int): FftwComplexArray {
             val byteSize = size * Sizes.COMPLEX
-            return FftwComplexArray((FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize), size)
+            return FftwComplexArray((FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize))
         }
     }
 }

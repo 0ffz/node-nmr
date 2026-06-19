@@ -27,6 +27,7 @@ dependencies {
     implementation("io.github.spair:imgui-java-binding:1.92.0")
     implementation("io.github.spair:imgui-java-app:1.92.0")
     implementation(miaLibs.kotlinx.coroutines.core)
+    implementation(miaLibs.kotlinx.collections.immutable)
 //    implementation("org.apache.commons:commons-math3:3.6.1")
 //    implementation("net.scoreworks:ArpackJ:1.0.0")
 //    implementation("org.ojalgo:ojalgo:56.2.1")

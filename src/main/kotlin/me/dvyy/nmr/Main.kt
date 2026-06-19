@@ -18,6 +18,7 @@ import me.dvyy.nmr.complex.takeComplex
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.parsing.removeDigitalFilter
 import me.dvyy.nmr.signal.expApodization
+import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.HankelOperatorBruteForce
 import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.ui.AppUiState
@@ -50,7 +51,6 @@ class Main : Application() {
         val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/5")
         val cleanFid = cleanData.readFid()
             .removeDigitalFilter(brukerData.acqus)
-            .takeComplex(2048)
             .expApodization(0.00008)
 
 //            .expApodization(0.0005)
@@ -61,7 +61,6 @@ class Main : Application() {
         // 2. Load the 1D FID
         val fid = brukerData.readFid()
             .removeDigitalFilter(brukerData.acqus)
-            .takeComplex(2048)
             .expApodization(0.00005)
         val rows = fid.size / 2
         val cols = fid.size - rows + 1
@@ -69,17 +68,22 @@ class Main : Application() {
         state.loadSpectrum("Clean", cleanFid)
         scope.launch {
             val denoised = memScoped {
-//            val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
-                val hankel = HankelOperatorBruteForce(fid.toMemorySegment())
+                val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
                 val result = propack(hankel, rows, cols, numWanted = 15)
                 result.reconstructDiagonals()
             }
             state.loadSpectrum("Denoised", denoised)
+//            val denoisedBruteForce = memScoped {
+//                val hankel = HankelOperatorBruteForce(fid.toMemorySegment())
+//                val result = propack(hankel, rows, cols, numWanted = 15)
+//                result.reconstructDiagonals()
+//            }
+//            state.loadSpectrum("Denoised brute", denoisedBruteForce)
         }
     }
 
     override fun process() = with(ImGuiKt) {
-        GraphScreen(state.spectra)
+        GraphScreen(state.spectra.value)
         window("Sidebar") {
             sliderFloat("lb", state.controls.lb.toFloat(), 0f, 0.01f, onChange = { state.controls.lb = it.toDouble() })
             button("Run SVD") {}

@@ -4,6 +4,7 @@ import imgui.ImGui.*
 import imgui.ImVec2
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.ImPlotSpec
+import imgui.extension.implot.flag.ImPlotFlags
 
 fun implotSpec(block: ImPlotSpec.() -> Unit) = ImPlotSpec().apply(block)
 
@@ -36,8 +37,15 @@ object ImGuiKt {
         ImPlot.endPlot()
     }
 
-    inline fun subplots(label: String, rows: Int, cols: Int, size: ImVec2 = ImVec2(-1f, -1f), content: () -> Unit) {
-        if (ImPlot.beginSubplots(label, rows, cols, size)) {
+    inline fun subplots(
+        label: String,
+        rows: Int,
+        cols: Int,
+        size: ImVec2 = ImVec2(-1f, -1f),
+        flags: Int = ImPlotFlags.None,
+        content: () -> Unit,
+    ) {
+        if (ImPlot.beginSubplots(label, rows, cols, size, flags)) {
             content()
             ImPlot.endSubplots()
         }
