@@ -10,6 +10,7 @@ import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.phasecorrect.phaseCorrect
 import me.dvyy.nmr.signal.fftShift
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import org.jetbrains.bio.viktor.asF64Array
@@ -35,7 +36,11 @@ class AppUiState {
             val plan = FftwPlan1D(fid.size, input, output, FftwDirection.FORWARD, FftwFlag.ESTIMATE)
             input.loadInterleaved(fid.data)
             plan.execute()
-            ComplexDoubleArray(output.toInterleavedArray()).fftShift().real().reversedArray()
+            ComplexDoubleArray(output.toInterleavedArray())
+                .fftShift()
+                .phaseCorrect(p0 = -225.0, p1 = 275.0)
+                .real()
+                .reversedArray()
         }
         val data = fid.data.clone()
         fft.asF64Array().let { it /= it.max() }

@@ -1,7 +1,6 @@
 package me.dvyy.nmr.complex
 
-import kotlin.math.atan2
-import kotlin.math.sqrt
+import kotlin.math.*
 
 // From Multik
 
@@ -14,7 +13,7 @@ import kotlin.math.sqrt
  * @constructor creates an instance of ComplexDouble64.
  */
 public class ComplexDouble64 internal constructor(
-    public override val re: Double, public override val im: Double
+    public override val re: Double, public override val im: Double,
 ) : ComplexDouble {
 
     override fun eq(other: Any): Boolean = equals(other)
@@ -383,3 +382,9 @@ public interface ComplexDouble {
     /** Hash code — workaround for value class `hashCode` limitations. */
     public fun hash(): Int
 }
+
+fun exp(value: ComplexDouble): ComplexDouble {
+    return ComplexDouble(exp(value.re) * cos(value.im), exp(value.re) * sin(value.im))
+}
+
+val Number.j get() = ComplexDouble(0.0, this.toDouble())

@@ -48,7 +48,7 @@ class Main : Application() {
 
     fun init() {
         val brukerData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/10")
-        val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/5")
+        val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/1d_carbon_ML/2")
         val cleanFid = cleanData.readFid()
             .removeDigitalFilter(brukerData.acqus)
             .expApodization(0.00008)
