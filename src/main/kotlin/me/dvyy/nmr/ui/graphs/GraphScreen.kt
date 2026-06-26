@@ -1,6 +1,7 @@
 package me.dvyy.nmr.ui.graphs
 
 import imgui.ImGui.*
+import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import kotlinx.collections.immutable.ImmutableList
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
@@ -15,7 +16,8 @@ fun ImGuiKt.GraphScreen(graphs: ImmutableList<SpectrumUiState>) {
     setNextWindowPos(viewport.posX, viewport.posY)
     setNextWindowSize(viewport.sizeX, viewport.sizeY)
 
-    window("Graphs", ImGuiWindowFlags.NoDecoration) {
+    pushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f)
+    window("Graphs", ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoBringToFrontOnFocus) {
         subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.SHARE_ITEMS) {
             plot("Spectra") {
                 graphs.forEach { spectrum ->
@@ -30,9 +32,10 @@ fun ImGuiKt.GraphScreen(graphs: ImmutableList<SpectrumUiState>) {
                     val spec = implotSpec {
                         if (spectrum.color != null) lineColor = spectrum.color
                     }
-                    line(spectrum.name, spectrum.fft, spec = spec)
+                    line(spectrum.name, spectrum.fft, xStart = spectrum.offset, xScale = spectrum.scale, spec = spec)
                 }
             }
         }
     }
+    popStyleVar()
 }

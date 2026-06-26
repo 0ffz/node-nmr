@@ -3,11 +3,10 @@ package me.dvyy.nmr.parsing
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
-import org.jetbrains.bio.viktor.F64Array
-import org.jetbrains.bio.viktor.F64FlatArray
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.io.path.div
 import kotlin.math.ceil
 import kotlin.math.log2
 import kotlin.math.pow
@@ -54,6 +53,7 @@ data class AcquisitionParams(
  */
 class BrukerDataset(private val directoryPath: String) {
     private val dir = File(directoryPath)
+    private val procFile = dir.toPath() / "pdata" / "1" / "procs"
 
     init {
         require(dir.exists() && dir.isDirectory) { "Invalid Bruker directory: $directoryPath" }
@@ -62,6 +62,7 @@ class BrukerDataset(private val directoryPath: String) {
     // Lazy load the dictionaries so we don't parse files until needed
     val acqus: Map<String, String> by lazy { JcampDxParser.parse(File(dir, "acqus")) }
     val acqu2s: Map<String, String> by lazy { JcampDxParser.parse(File(dir, "acqu2s")) }
+    val procs: Map<String, String> by lazy { JcampDxParser.parse(procFile.toFile()) }
 
     // Strongly typed parameters extracted from the dictionary
     val params: AcquisitionParams by lazy {

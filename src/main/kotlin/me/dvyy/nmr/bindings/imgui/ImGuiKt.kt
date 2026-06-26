@@ -16,9 +16,18 @@ object ImPlotContext {
 }
 
 object ImGuiKt {
-    inline fun sliderFloat(label: String, value: Float, min: Float, max: Float, onChange: (Float) -> Unit) {
+    inline fun sliderFloat(label: String, value: Float, min: Float, max: Float, format: String = "%.6f", onChange: (Float) -> Unit) {
         val arr = floatArrayOf(value)
-        if (sliderFloat(label, arr, min, max)) onChange(arr[0])
+        if (sliderFloat(label, arr, min, max, format)) onChange(arr[0])
+    }
+
+    inline fun sliderDouble(label: String, value: Double, min: Double, max: Double, format: String = "%.6f", onChange: (Double) -> Unit) {
+        sliderFloat(label, value.toFloat(), min.toFloat(), max.toFloat(), format) { onChange(it.toDouble()) }
+    }
+
+    inline fun sliderInt(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
+        val arr = intArrayOf(value)
+        if (sliderInt(label, arr, min, max)) onChange(arr[0])
     }
 
     inline fun window(label: String, flags: Int = 0, content: () -> Unit) {
