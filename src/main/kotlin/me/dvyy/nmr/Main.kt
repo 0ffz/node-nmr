@@ -22,6 +22,7 @@ import me.dvyy.nmr.ui.processing.ControlScreen
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
+import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.SpectraScreen
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -82,6 +83,7 @@ class Main : Application() {
         ImGuiInternal.dockBuilderSplitNode(left.get(), ImGuiDir.Down, 0.2f, leftBottom, leftTop)
         ImGuiInternal.dockBuilderDockWindow("Graphs", right.get())
         ImGuiInternal.dockBuilderDockWindow("Controls", leftTop.get())
+        ImGuiInternal.dockBuilderDockWindow("Singular Values", leftTop.get())
         ImGuiInternal.dockBuilderDockWindow("Spectra", leftBottom.get())
         ImGuiInternal.dockBuilderFinish(dockspaceId)
 
@@ -109,6 +111,9 @@ class Main : Application() {
 
         window("Controls") {
             ControlScreen(state)
+        }
+        window("Singular Values") {
+            SingularValuesGraph(state)
         }
         window("Spectra") {
             SpectraScreen(state)

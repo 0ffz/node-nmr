@@ -2,6 +2,7 @@ package me.dvyy.nmr.ui
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
@@ -27,12 +28,17 @@ import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
 import org.jetbrains.bio.viktor.asF64Array
+import smile.wavelet.HaarWavelet
+import smile.wavelet.SymletWavelet
+import smile.wavelet.Wavelet
+import kotlin.math.abs
 
 class SpectrumViewModel(
     val scope: CoroutineScope,
 ) {
     private var lastSpectrum = 0
     var spectra by mutableStateOf(persistentListOf<SpectrumUiState>())
+    var svdResults = mutableStateListOf<DoubleArray>()
     val visibleSpectra by derivedStateOf { spectra.filter { it.visible } }
     val controls = DenoiserControlsUiState()
     var first = true
@@ -141,6 +147,7 @@ class SpectrumViewModel(
 //                val hankel = HankelOperatorBruteForce(fid.toMemorySegment())
                 val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
                 val result = propack(hankel, rows, cols, numWanted = controls.numSingularValues)
+                svdResults += result.singularValues
                 result.reconstructDiagonals()
             }
             denoised[0] /= 2

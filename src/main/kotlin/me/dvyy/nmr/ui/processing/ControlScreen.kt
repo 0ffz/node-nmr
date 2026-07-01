@@ -18,7 +18,7 @@ fun ImGuiKt.ControlScreen(state: SpectrumViewModel) {
     }
 
     section("Preprocessing") {
-        inputDouble("lb", spectrum.lb, -0.001, 0.01, onChange = { spectrum.lb = it })
+        sliderDouble("lb", spectrum.lb, -0.001, 0.01, onChange = { spectrum.lb = it })
         sliderDouble("gauss", spectrum.gauss ?: 0.0, -0.0001, 0.001, onChange = { spectrum.gauss = it })
         sliderDouble("p0", spectrum.p0, -180.0, 180.0, onChange = { spectrum.p0 = it })
         button("Apply preprocessing") {
