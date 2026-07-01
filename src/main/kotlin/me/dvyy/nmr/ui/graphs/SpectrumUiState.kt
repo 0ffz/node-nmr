@@ -1,5 +1,8 @@
 package me.dvyy.nmr.ui.graphs
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import imgui.ImVec4
 import me.dvyy.nmr.complex.ComplexDoubleArray
 
@@ -18,6 +21,8 @@ class SpectrumUiState(
     var offset: Double = 0.0,
     var scale: Double = 0.0,
 ) {
+    var visible: Boolean by mutableStateOf(true)
+
     val spectrum = DoubleArray(spectrumUnprocessed.size)
     val processing = ComplexDoubleArray(spectrumUnprocessed.size)
 }

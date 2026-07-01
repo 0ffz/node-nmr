@@ -2,13 +2,13 @@ plugins {
     application
     kotlin("jvm") version "2.4.0"
     id("org.graalvm.python") version "25.0.3"
+    alias(miaLibs.plugins.compose.compiler)
+    alias(miaLibs.plugins.jetbrainsCompose)
 }
-
-group = "com.mineinabyss"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    google()
     mavenLocal()
 }
 
@@ -28,7 +28,9 @@ dependencies {
     implementation("io.github.spair:imgui-java-app:1.92.0")
     implementation(miaLibs.kotlinx.coroutines.core)
     implementation(miaLibs.kotlinx.collections.immutable)
+    implementation("org.jetbrains.compose.runtime:runtime:${miaLibs.versions.compose.asProvider().get()}")
     implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("io.github.vinceglb:filekit-dialogs:0.14.2")
 //    implementation("net.scoreworks:ArpackJ:1.0.0")
 //    implementation("org.ojalgo:ojalgo:56.2.1")
 //    implementation("com.martmists.ndarray-simd:ndarray-simd:1.7.6")
@@ -42,16 +44,12 @@ kotlin {
 }
 
 application {
-    mainClass.set("me.dvyy.nmr.propack.MainKt")
+    mainClass.set("me.dvyy.nmr.MainKt")
     applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks {
-
 }
 
 graalPy {
