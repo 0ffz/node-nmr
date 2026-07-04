@@ -28,10 +28,6 @@ import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
 import org.jetbrains.bio.viktor.asF64Array
-import smile.wavelet.HaarWavelet
-import smile.wavelet.SymletWavelet
-import smile.wavelet.Wavelet
-import kotlin.math.abs
 
 class SpectrumViewModel(
     val scope: CoroutineScope,
