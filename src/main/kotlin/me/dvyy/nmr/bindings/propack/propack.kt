@@ -19,9 +19,9 @@ fun propack(
     numWanted: Int,
 ): SVDResult {
     // Ensure the JVM is run with --enable-native-access=ALL-UNNAMED
-    System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/liblapack.so")
-    System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libpropack_common.so")
-    System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libzpropack.so") // Loads libzpropack.so
+    org.scijava.nativelib.NativeLoader.loadLibrary("lapack")
+    org.scijava.nativelib.NativeLoader.loadLibrary("propack_common")
+    org.scijava.nativelib.NativeLoader.loadLibrary("zpropack") // Loads libzpropack.so
 
     val dim = numWanted * 2
 

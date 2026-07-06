@@ -1,5 +1,6 @@
 package me.dvyy.nmr.bindings.fftw
 
+import org.scijava.nativelib.NativeLoader
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.Linker
 import java.lang.foreign.SymbolLookup
@@ -8,7 +9,7 @@ import java.lang.invoke.MethodHandle
 
 internal object FftwBindings {
     init {
-        System.load("/var/home/offz/projects/nmr-kotlin/src/main/resources/libfftw3.so")
+        NativeLoader.loadLibrary("fftw3")
     }
 
     private val linker = Linker.nativeLinker()

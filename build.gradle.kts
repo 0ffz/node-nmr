@@ -36,6 +36,7 @@ dependencies {
 //    implementation("com.martmists.ndarray-simd:ndarray-simd:1.7.6")
 //    implementation("org.graalvm.polyglot:polyglot:24.1.1")
 //    implementation("org.graalvm.polyglot:python:24.1.1")
+    implementation("org.scijava:native-lib-loader:2.5.0")
     testImplementation(kotlin("test"))
 }
 

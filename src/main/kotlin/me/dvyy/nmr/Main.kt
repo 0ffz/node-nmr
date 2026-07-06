@@ -63,8 +63,8 @@ class Main : Application() {
     }
 
     fun init() {
-        val brukerData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/13C_lowsignal/27")
-        val cleanData = BrukerDataset("/var/home/offz/projects/nmr-kotlin/data/13C_lowsignal/28")
+        val brukerData = BrukerDataset("data/13C_lowsignal/27")
+        val cleanData = BrukerDataset("data/13C_lowsignal/28")
         println("Pulse Program: ${brukerData.acqus["PULPROG"]}")
         println("Spectrometer Frequency: ${brukerData.acqus["SFO1"]} MHz")
 
