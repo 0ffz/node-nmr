@@ -1,11 +1,6 @@
 package me.dvyy.nmr.ui
 
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.*
 import imgui.ImVec4
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +11,7 @@ import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.bindings.propack.propack
+import me.dvyy.nmr.bindings.wavelib.StationaryWaveletTransform
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.parsing.removeDigitalFilter
@@ -25,8 +21,10 @@ import me.dvyy.nmr.signal.expApodized
 import me.dvyy.nmr.signal.fftShift
 import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.reconstructDiagonals
+import me.dvyy.nmr.ui.graphs.GraphType
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
+import me.dvyy.nmr.wavelet.WaveletHelpers.applySoftThreshold
 import org.jetbrains.bio.viktor.asF64Array
 
 class SpectrumViewModel(
@@ -39,6 +37,7 @@ class SpectrumViewModel(
     val controls = DenoiserControlsUiState()
     var first = true
     var selectedSpectrum = 0
+    var graphType by mutableStateOf<GraphType>(GraphType.FFT)
 
     fun update(
         spectrum: SpectrumUiState,
@@ -53,6 +52,20 @@ class SpectrumViewModel(
         spectrum.spectrum.asF64Array().let { it /= it.max() }
         calculateFFT(spectrum)
 
+    }
+
+    fun copy(spectrum: SpectrumUiState, type: GraphType) {
+        when (type) {
+            GraphType.WAVELET -> {
+                TODO()
+//                val spec = ComplexDoubleArray.from(spectrum.waveletRe, spectrum.waveletIm)
+//                loadSpectrum(spectrum.name, spec, spectrum.p0, spectrum.p1, spectrum.offset, spectrum.scale)
+            }
+
+            else -> {
+                TODO()
+            }
+        }
     }
 
     fun calculateFFT(
@@ -73,8 +86,23 @@ class SpectrumViewModel(
                 .real()
 //                .reversedArray()
         }
+        val specRe = spectrum.processing.real()
+        val waveletIm = spectrum.processing.im()
+        val waveletRe = StationaryWaveletTransform(waveletName = "db2", signalLength = specRe.size, level = 4).use { swt ->
+            swt.forward(specRe)
+        }
+//        WaveletShrinkage.denoise(waveletRe, D4Wavelet())
+//        WaveletShrinkage.denoise(waveletIm, D4Wavelet())
+//        D4Wavelet().transform(waveletRe)
+//        D4Wavelet().transform(waveletIm)
+
         fft.asF64Array().let { it /= it.max() }
+        waveletRe.asF64Array().let { it /= it.max() }
+        waveletRe.applySoftThreshold(0.1)
+
         spectrum.fft = fft
+        spectrum.waveletRe = waveletRe
+        spectrum.waveletIm = waveletIm
     }
 
     fun loadSpectrum(
@@ -121,6 +149,7 @@ class SpectrumViewModel(
             SpectrumUiState(
                 spectrumUnprocessed = fid,
                 fft = DoubleArray(data.size / 2),
+                waveletRe = DoubleArray(data.size / 2),
                 name = name + " (${lastSpectrum++})",
                 color = color,
                 lb = 0.0,

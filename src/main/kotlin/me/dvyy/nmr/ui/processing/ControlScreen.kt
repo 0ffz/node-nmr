@@ -18,12 +18,12 @@ fun ImGuiKt.ControlScreen(state: SpectrumViewModel) {
     }
 
     section("Preprocessing") {
-        sliderDouble("lb", spectrum.lb, -0.001, 0.01, onChange = { spectrum.lb = it })
-        sliderDouble("gauss", spectrum.gauss ?: 0.0, -0.0001, 0.001, onChange = { spectrum.gauss = it })
-        sliderDouble("p0", spectrum.p0, -180.0, 180.0, onChange = { spectrum.p0 = it })
-        button("Apply preprocessing") {
+        sliderDouble("lb", spectrum.lb, -0.001, 0.01, onChange = {
+            spectrum.lb = it
             state.update(spectrum)
-        }
+        })
+        sliderDouble("gauss", spectrum.gauss ?: 0.0, -0.0001, 0.001, onChange = { spectrum.gauss = it })
+//        sliderDouble("p0", spectrum.p0, -180.0, 180.0, onChange = { spectrum.p0 = it })
     }
 
 
@@ -31,6 +31,13 @@ fun ImGuiKt.ControlScreen(state: SpectrumViewModel) {
         sliderInt("singularValues", state.controls.numSingularValues, 1, 100, onChange = { state.controls.numSingularValues = it })
         button("Run SVD") {
             state.generateSVD(spectrum)
+        }
+    }
+
+    section("Copy") {
+        button("Make copy from current view") {
+            val type = state.graphType
+            state.copy(spectrum, type)
         }
     }
 }

@@ -16,12 +16,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.ui.SpectrumViewModel
+import me.dvyy.nmr.synthetic.Resonance
+import me.dvyy.nmr.synthetic.addGaussianNoise
+import me.dvyy.nmr.synthetic.generateNmrSignal
 import me.dvyy.nmr.ui.Colors
-import me.dvyy.nmr.ui.processing.ControlScreen
+import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
+import me.dvyy.nmr.ui.processing.ControlScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.SpectraScreen
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -68,7 +71,30 @@ class Main : Application() {
         println("Pulse Program: ${brukerData.acqus["PULPROG"]}")
         println("Spectrometer Frequency: ${brukerData.acqus["SFO1"]} MHz")
 
-
+        val sampleRate = 10000.0 // 10 kHz
+        val dwellTime = 1.0 / sampleRate
+        val peaks = listOf(
+//            Resonance(amplitude = 10.0, frequencyHz = 150.0, phaseRadians = 0.0, t2StarSeconds = 0.05),
+            Resonance(amplitude = 5.0, frequencyHz = -50.0, phaseRadians = 0.0, t2StarSeconds = 0.1)
+        )
+        state.loadSpectrum(
+            "Synthetic",
+            generateNmrSignal(
+                16384,
+                dwellTime,
+                peaks
+            ).addGaussianNoise(1.0),
+            0.0, 0.0, 0.0,1.0
+        )
+        state.loadSpectrum(
+            "Synthetic",
+            generateNmrSignal(
+                16384,
+                dwellTime,
+                peaks
+            ),
+            0.0, 0.0, 0.0,1.0
+        )
         state.loadSpectrum("Dirty", brukerData, color = Colors.backgroundGray)
         state.loadSpectrum("Clean", cleanData)
     }
@@ -105,7 +131,11 @@ class Main : Application() {
 
         withStyle(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f) {
             window("Graphs") {
-                GraphScreen(state.visibleSpectra)
+                GraphScreen(
+                    state.graphType,
+                    onGraphChange = { state.graphType = it },
+                    state.visibleSpectra
+                )
             }
         }
 

@@ -77,6 +77,8 @@ value class ComplexDoubleArray(
 
     fun toList() = map { it }
 
+    inline fun mapComplex(crossinline block: (ComplexDouble) -> ComplexDouble) = ComplexDoubleArray(size) { block(get(it)) }
+
     inline fun getRe(index: Int) = data[index * 2]
     inline fun getIm(index: Int) = data[index * 2 + 1]
 
@@ -115,6 +117,18 @@ value class ComplexDoubleArray(
             newData[data.size + (i shl 1) + 1] = elements[i].im
         }
         return ComplexDoubleArray(newData)
+    }
+    
+    companion object {
+        fun from(real: DoubleArray, imag: DoubleArray): ComplexDoubleArray {
+            require(real.size == imag.size) { "Real and imaginary arrays must have the same size" }
+            val result = ComplexDoubleArray(real.size)
+            for (i in real.indices) {
+                result.data[i * 2] = real[i]
+                result.data[i * 2 + 1] = imag[i]
+            }
+            return result
+        }
     }
 }
 
