@@ -6,6 +6,7 @@ import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.ui.SpectrumViewModel
 
 sealed interface Node {
@@ -17,7 +18,9 @@ sealed interface Node {
         override val name: String,
         val inputId: Int,
         val outputId: Int,
-    ): Node
+    ): Node {
+        var input: ComplexDoubleArray? = null
+    }
 
     data class Input(
         override val id: Int,
@@ -86,10 +89,12 @@ fun ImGuiKt.NodeUi(node: Node) {
     }
 
 
-    ImGui.pushItemWidth(100f)
-    sliderDouble("lb", 5.0, 0.0, 10.0, onChange = {})
+    if(node is Node.Process) {
+        ImGui.pushItemWidth(100f)
+        sliderDouble("lb", 5.0, 0.0, 10.0, onChange = {})
 //    sliderDouble("test", 3.0, 0.0, 10.0, onChange = {})
-    ImGui.popItemWidth()
+        ImGui.popItemWidth()
+    }
 
     ImNodes.endNode();
 }

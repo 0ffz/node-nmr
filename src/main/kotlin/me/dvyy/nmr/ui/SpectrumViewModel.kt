@@ -27,6 +27,7 @@ import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
 import me.dvyy.nmr.wavelet.WaveletHelpers.applySoftThreshold
+import me.dvyy.nmr.wavelet.WaveletHelpers.waveletDenoise
 import org.jetbrains.bio.viktor.asF64Array
 
 class SpectrumViewModel(
@@ -117,6 +118,7 @@ class SpectrumViewModel(
 //        D4Wavelet().transform(waveletIm)
 
         fft.asF64Array().let { it /= it.max() }
+        fft.reverse()
 //        waveletIm.asF64Array().let {
 //            it /= it.max()
 //        }
@@ -124,7 +126,6 @@ class SpectrumViewModel(
             it /= it.max()
         }
 
-//        waveletRe.applySoftThreshold(0.1)
 
         spectrum.fft = fft
         spectrum.waveletRe = waveletRe
@@ -151,7 +152,7 @@ class SpectrumViewModel(
             points,
             p0 = procs["PHC0"]?.toDouble() ?: 0.0,
             p1 = procs["PHC1"]?.toDouble() ?: 0.0,
-            offset = -offset,
+            offset = offset,
             scale = -scale,
             color = color
         )

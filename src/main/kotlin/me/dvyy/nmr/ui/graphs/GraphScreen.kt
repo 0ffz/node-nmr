@@ -1,6 +1,9 @@
 package me.dvyy.nmr.ui.graphs
 
 import imgui.ImGui
+import imgui.extension.implot.ImPlot
+import imgui.extension.implot.flag.ImPlotAxis
+import imgui.extension.implot.flag.ImPlotAxisFlags
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.implotSpec
 
@@ -35,6 +38,7 @@ fun ImGuiKt.GraphScreen(
             }
         }
         plot("FFT") {
+            ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
             graphs.forEach { spectrum ->
                 val spec = implotSpec {
                     if (spectrum.color != null) lineColor = spectrum.color
