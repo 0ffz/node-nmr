@@ -24,6 +24,7 @@ import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
+import me.dvyy.nmr.ui.nodes.NodeScreen
 import me.dvyy.nmr.ui.processing.ControlScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.SpectraScreen
@@ -108,6 +109,7 @@ class Main : Application() {
         ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Left, 0.2f, left, right)
         ImGuiInternal.dockBuilderSplitNode(left.get(), ImGuiDir.Down, 0.2f, leftBottom, leftTop)
         ImGuiInternal.dockBuilderDockWindow("Graphs", right.get())
+        ImGuiInternal.dockBuilderDockWindow("Nodes", right.get())
         ImGuiInternal.dockBuilderDockWindow("Controls", leftTop.get())
         ImGuiInternal.dockBuilderDockWindow("Singular Values", leftTop.get())
         ImGuiInternal.dockBuilderDockWindow("Spectra", leftBottom.get())
@@ -147,6 +149,9 @@ class Main : Application() {
         }
         window("Spectra") {
             SpectraScreen(state)
+        }
+        window("Nodes") {
+            NodeScreen(state)
         }
     }
 }

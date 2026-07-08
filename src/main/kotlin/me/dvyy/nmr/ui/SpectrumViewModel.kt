@@ -2,6 +2,7 @@ package me.dvyy.nmr.ui
 
 import androidx.compose.runtime.*
 import imgui.ImVec4
+import imgui.extension.imnodes.ImNodes
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -23,6 +24,7 @@ import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.ui.graphs.GraphType
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
+import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
 import me.dvyy.nmr.wavelet.WaveletHelpers.applySoftThreshold
 import org.jetbrains.bio.viktor.asF64Array
@@ -30,6 +32,21 @@ import org.jetbrains.bio.viktor.asF64Array
 class SpectrumViewModel(
     val scope: CoroutineScope,
 ) {
+    init {
+        ImNodes.createContext()
+    }
+    val editorContext = ImNodes.editorContextCreate()
+
+    val nodes = mutableListOf(
+        Node.Process(1, "Apodization", 2, 3),
+        Node.Process(4, "SVD", 5, 6),
+        Node.Input(7, "Dataset", 8)
+    )
+    val links = mutableMapOf<Int, Int>(
+        3 to 5,
+    )
+
+
     private var lastSpectrum = 0
     var spectra by mutableStateOf(persistentListOf<SpectrumUiState>())
     var svdResults = mutableStateListOf<DoubleArray>()
@@ -87,9 +104,12 @@ class SpectrumViewModel(
 //                .reversedArray()
         }
         val specRe = spectrum.processing.real()
-        val waveletIm = spectrum.processing.im()
-        val waveletRe = StationaryWaveletTransform(waveletName = "db2", signalLength = specRe.size, level = 4).use { swt ->
-            swt.forward(specRe)
+        val specIm = spectrum.processing.im()
+        val waveletIm = StationaryWaveletTransform(waveletName = "db2", signalLength = specIm.size, level = 4).use { swt ->
+            swt.forward(specIm)
+        }
+        val waveletRe = StationaryWaveletTransform(waveletName = "db2", signalLength = fft.size, level = 2).use { swt ->
+            swt.forward(fft)
         }
 //        WaveletShrinkage.denoise(waveletRe, D4Wavelet())
 //        WaveletShrinkage.denoise(waveletIm, D4Wavelet())
@@ -97,12 +117,18 @@ class SpectrumViewModel(
 //        D4Wavelet().transform(waveletIm)
 
         fft.asF64Array().let { it /= it.max() }
-        waveletRe.asF64Array().let { it /= it.max() }
-        waveletRe.applySoftThreshold(0.1)
+//        waveletIm.asF64Array().let {
+//            it /= it.max()
+//        }
+        waveletRe.asF64Array().let {
+            it /= it.max()
+        }
+
+//        waveletRe.applySoftThreshold(0.1)
 
         spectrum.fft = fft
         spectrum.waveletRe = waveletRe
-        spectrum.waveletIm = waveletIm
+//        spectrum.waveletIm = waveletIm
     }
 
     fun loadSpectrum(
