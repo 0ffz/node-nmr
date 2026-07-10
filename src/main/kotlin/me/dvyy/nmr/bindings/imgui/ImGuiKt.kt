@@ -5,9 +5,8 @@ import imgui.ImGui.*
 import imgui.ImVec2
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.ImPlotSpec
-import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiTreeNodeFlags
 import imgui.extension.implot.flag.ImPlotFlags
+import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImDouble
 
 fun implotSpec(block: ImPlotSpec.() -> Unit) = ImPlotSpec().apply(block)
@@ -48,8 +47,13 @@ object ImGuiKt {
         end()
     }
 
-    inline fun section(label: String, content: () -> Unit) {
-        if (collapsingHeader(label, ImGuiTreeNodeFlags.DefaultOpen)) content()
+    inline fun section(
+        label: String,
+        defaultOpen: Boolean = true,
+        flags: Int = 0,
+        content: () -> Unit,
+    ) {
+        if (collapsingHeader(label, flags or (if (defaultOpen) ImGuiTreeNodeFlags.DefaultOpen else 0))) content()
     }
 
     inline fun button(label: String, onClick: () -> Unit) {
@@ -62,11 +66,16 @@ object ImGuiKt {
         popStyleVar()
     }
 
-    inline fun plot(label: String, content: ImPlotContext.() -> Unit) {
-        if (ImPlot.beginPlot(label)) {
+    inline fun plot(
+        label: String,
+        size: ImVec2? = null,
+        flags: Int = 0,
+        content: ImPlotContext.() -> Unit,
+    ) {
+        if (if (size == null) ImPlot.beginPlot(label, flags) else ImPlot.beginPlot(label, size, flags)) {
             content(ImPlotContext)
+            ImPlot.endPlot()
         }
-        ImPlot.endPlot()
     }
 
     inline fun mainMenuBar(content: () -> Unit) {

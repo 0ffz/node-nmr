@@ -24,6 +24,7 @@ import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
+import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
 import me.dvyy.nmr.ui.processing.ControlScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
@@ -37,6 +38,9 @@ class Main : Application() {
     val scope = CoroutineScope(Dispatchers.IO)
     val state = SpectrumViewModel(scope)
     val menuViewModel = MenuViewModel(scope, state)
+    val nodeGraph = NodeGraphViewModel(
+        dataset = BrukerDataset("data/13C_lowsignal/27")
+    )
 
     private val applyScheduled = AtomicBoolean(false)
     private val snapshotHandle = Snapshot.registerGlobalWriteObserver {
@@ -151,7 +155,7 @@ class Main : Application() {
             SpectraScreen(state)
         }
         window("Nodes") {
-            NodeScreen(state)
+            NodeScreen(nodeGraph)
         }
     }
 }

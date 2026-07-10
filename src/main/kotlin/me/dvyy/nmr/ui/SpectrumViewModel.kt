@@ -24,6 +24,7 @@ import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.ui.graphs.GraphType
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
+import me.dvyy.nmr.ui.nodes.ApodizationTransformation
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.processing.DenoiserControlsUiState
 import me.dvyy.nmr.wavelet.WaveletHelpers.applySoftThreshold
@@ -33,25 +34,13 @@ import org.jetbrains.bio.viktor.asF64Array
 class SpectrumViewModel(
     val scope: CoroutineScope,
 ) {
-    init {
-        ImNodes.createContext()
-    }
-    val editorContext = ImNodes.editorContextCreate()
-
-    val nodes = mutableListOf(
-        Node.Process(1, "Apodization", 2, 3),
-        Node.Process(4, "SVD", 5, 6),
-        Node.Input(7, "Dataset", 8)
-    )
-    val links = mutableMapOf<Int, Int>(
-        3 to 5,
-    )
-
-
     private var lastSpectrum = 0
     var spectra by mutableStateOf(persistentListOf<SpectrumUiState>())
     var svdResults = mutableStateListOf<DoubleArray>()
-    val visibleSpectra by derivedStateOf { spectra.filter { it.visible } }
+    val visibleSpectra by derivedStateOf {
+        println("Visible spectra updated!")
+        spectra.filter { it.visible }
+    }
     val controls = DenoiserControlsUiState()
     var first = true
     var selectedSpectrum = 0

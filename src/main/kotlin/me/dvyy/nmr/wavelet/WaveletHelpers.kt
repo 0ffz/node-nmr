@@ -1,7 +1,6 @@
 package me.dvyy.nmr.wavelet
 
 import me.dvyy.nmr.bindings.wavelib.StationaryWaveletTransform
-import kotlin.use
 
 object WaveletHelpers {
     // Helper function for Soft Thresholding
@@ -19,10 +18,13 @@ object WaveletHelpers {
         }
     }
 
-    fun waveletDenoise(input: DoubleArray): DoubleArray {
+    fun waveletDenoise(
+        threshold: Double = 0.1,
+        input: DoubleArray,
+    ): DoubleArray {
         return StationaryWaveletTransform(waveletName = "db2", signalLength = input.size, level = 4).use { swt ->
             val waveletIm = swt.forward(input)
-            waveletIm.applySoftThreshold(start = input.size,0.1)
+            waveletIm.applySoftThreshold(start = input.size, threshold)
             swt.inverse(waveletIm)
         }
     }
