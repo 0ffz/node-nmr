@@ -1,5 +1,6 @@
 package me.dvyy.nmr.bindings.wavelib
 
+import org.scijava.nativelib.NativeLoader
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
 import java.util.function.Supplier
@@ -7,7 +8,7 @@ import java.util.function.Supplier
 
 object WavelibNative {
     init {
-        System.load("/var/home/offz/projects/nmr-kt/src/main/resources/natives/linux_64/libwavelib.so")
+        NativeLoader.loadLibrary("wavelib")
     }
 
     private val LINKER: Linker = Linker.nativeLinker()

@@ -8,6 +8,7 @@ import imgui.extension.implot.ImPlotSpec
 import imgui.extension.implot.flag.ImPlotFlags
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImDouble
+import kotlin.math.abs
 
 fun implotSpec(block: ImPlotSpec.() -> Unit) = ImPlotSpec().apply(block)
 
@@ -26,6 +27,29 @@ object ImGuiKt {
     inline fun sliderFloat(label: String, value: Float, min: Float, max: Float, format: String = "%.6f", onChange: (Float) -> Unit) {
         val arr = floatArrayOf(value)
         if (sliderFloat(label, arr, min, max, format)) onChange(arr[0])
+    }
+
+    inline fun dragFloat(label: String, value: Float, min: Float = 1f, max: Float = 0f, onChange: (Float) -> Unit) {
+        val arr = floatArrayOf(value)
+        val speed = when {
+            abs(value) <= 0.01f -> 0.00001f
+            abs(value) <= 0.1f -> 0.0001f
+            abs(value) <= 1f -> 0.001f
+            abs(value) <= 10f -> 0.01f
+            else -> 0.1f
+        }
+        val format = when {
+            abs(value) <= 0.01f -> "%.5f"
+            abs(value) <= 0.1f -> "%.4f"
+            abs(value) <= 1f -> "%.3f"
+            abs(value) <= 10f -> "%.2f"
+            else -> "%.1f"
+        }
+        if (dragFloat(label, arr, speed, min, max, format)) onChange(arr[0])
+    }
+
+    inline fun dragDouble(label: String, value: Double, min: Double = 1.0, max: Double = 0.0, onChange: (Double) -> Unit) {
+        dragFloat(label, value.toFloat(), min.toFloat(), max.toFloat(), onChange = { onChange(it.toDouble()) })
     }
 
     inline fun sliderDouble(label: String, value: Double, min: Double, max: Double, format: String = "%.6f", onChange: (Double) -> Unit) {

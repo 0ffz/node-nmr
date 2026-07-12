@@ -11,10 +11,11 @@ class NodeGraphViewModel(
     }
     val editorContext = ImNodes.editorContextCreate()
 
+    var id = 1
     val nodes = mutableListOf(
-        Node.Process(1, "Apodization", ApodizationTransformation(), 2, 3),
-        Node.Process(4, "Wavelet", WaveletTransformation(), 5, 6),
-        Node.Input(7, "Dataset", dataset, 8)
+        Node.Process(id++, "Apodization", ApodizationTransformation(), id++, id++),
+        Node.Process(id++, "Wavelet", WaveletTransformation(), id++, id++),
+        Node.Input(id++, "Dataset", dataset, id++)
     )
     private val _links = mutableMapOf<Int, Int>()
     val links: Map<Int, Int> = _links
@@ -37,5 +38,8 @@ class NodeGraphViewModel(
         return nodes.find { it.outputId == id || (it as? Node.Process)?.inputId == id}
     }
 
+    fun loadDataset(dataset: BrukerDataset, name: String) {
+        nodes.add(Node.Input(id++, name, dataset, id++))
+    }
 
 }

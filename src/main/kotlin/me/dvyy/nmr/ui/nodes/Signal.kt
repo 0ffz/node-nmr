@@ -16,8 +16,12 @@ sealed class Signal {
     abstract val fft: ComplexDoubleArray
     abstract val wavelet: ComplexDoubleArray
 
-    val graphFid: DoubleArray by lazy { fid.real() }
-    val graphFft: DoubleArray by lazy { fft.real() }
+    val graphFid: DoubleArray by lazy {
+        fid.real().also { it.asF64Array().let { it /= it.max() } }
+    }
+    val graphFft: DoubleArray by lazy {
+        fft.real()
+    }
     val graphWavelet: DoubleArray by lazy { wavelet.real() }
 
     data class Fid(val data: ComplexDoubleArray) : Signal() {
@@ -39,7 +43,6 @@ sealed class Signal {
             }.also { fft ->
                 fft.data.asF64Array().let { it /= it.max() }
             }
-
         }
         override val wavelet: ComplexDoubleArray
             get() = TODO("Not yet implemented")

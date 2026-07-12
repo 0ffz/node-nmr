@@ -37,10 +37,10 @@ import imgui.internal.ImGui as ImGuiInternal
 class Main : Application() {
     val scope = CoroutineScope(Dispatchers.IO)
     val state = SpectrumViewModel(scope)
-    val menuViewModel = MenuViewModel(scope, state)
     val nodeGraph = NodeGraphViewModel(
         dataset = BrukerDataset("data/13C_lowsignal/27")
     )
+    val menuViewModel = MenuViewModel(scope, nodeGraph)
 
     private val applyScheduled = AtomicBoolean(false)
     private val snapshotHandle = Snapshot.registerGlobalWriteObserver {
@@ -110,11 +110,10 @@ class Main : Application() {
         val left = ImInt()
         val leftTop = ImInt()
         val leftBottom = ImInt()
-        ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Left, 0.2f, left, right)
+        ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Left, 0.5f, left, right)
         ImGuiInternal.dockBuilderSplitNode(left.get(), ImGuiDir.Down, 0.2f, leftBottom, leftTop)
         ImGuiInternal.dockBuilderDockWindow("Graphs", right.get())
-        ImGuiInternal.dockBuilderDockWindow("Nodes", right.get())
-        ImGuiInternal.dockBuilderDockWindow("Controls", leftTop.get())
+        ImGuiInternal.dockBuilderDockWindow("Nodes", leftTop.get())
         ImGuiInternal.dockBuilderDockWindow("Singular Values", leftTop.get())
         ImGuiInternal.dockBuilderDockWindow("Spectra", leftBottom.get())
         ImGuiInternal.dockBuilderFinish(dockspaceId)
@@ -140,14 +139,15 @@ class Main : Application() {
                 GraphScreen(
                     state.graphType,
                     onGraphChange = { state.graphType = it },
-                    state.visibleSpectra
+                    nodeGraph.nodes,
+                    state.visibleSpectra,
                 )
             }
         }
 
-        window("Controls") {
-            ControlScreen(state)
-        }
+//        window("Controls") {
+//            ControlScreen(state)
+//        }
         window("Singular Values") {
             SingularValuesGraph(state)
         }

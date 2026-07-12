@@ -3,15 +3,17 @@ package me.dvyy.nmr.ui.menubar
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
+import io.github.vinceglb.filekit.name
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.ui.SpectrumViewModel
+import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import kotlin.system.exitProcess
 
 class MenuViewModel(
     val scope: CoroutineScope,
-    val spectra: SpectrumViewModel,
+    val graph: NodeGraphViewModel,
 ) {
     fun exit() {
         exitProcess(0)
@@ -20,7 +22,7 @@ class MenuViewModel(
     fun openFilePicker() {
         scope.launch {
             val file = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
-            spectra.loadSpectrum(file.file.name, BrukerDataset(file.file.absolutePath))
+            graph.loadDataset(BrukerDataset(file.file.absolutePath), file.name)
         }
     }
 }

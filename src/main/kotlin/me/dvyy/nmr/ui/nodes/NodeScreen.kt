@@ -4,11 +4,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import imgui.ImColor
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
-import imgui.extension.imnodes.flag.ImNodesCol
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
 import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.extension.implot.ImPlot
@@ -117,12 +115,13 @@ fun ImGuiKt.NodeUi(node: Node) {
 
 
     if (node is Node.Process) {
-        val states = node.signalStep.mutableStates
+        val states = node.signalStep.parameters
         ImGui.pushItemWidth(100f)
-        for (state in states) {
-            val value = state.value
+        for (param in states) {
+            val value = param.state.value
             when (value) {
-                is Double -> sliderDouble("test", value, 0.0, 0.1, onChange = { (state as MutableState<Double>).value = it })
+                is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
+                is Int -> sliderInt(param.name, value, 0, 10, onChange = { (param.state as MutableState<Int>).value = it })
             }
 
         }

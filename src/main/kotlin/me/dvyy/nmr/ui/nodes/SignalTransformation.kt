@@ -4,7 +4,7 @@ import androidx.compose.runtime.*
 
 interface SignalProviding {
     val output: State<Signal?>
-    val mutableStates: List<MutableState<*>> get() = emptyList()
+    val parameters: List<Parameter> get() = emptyList()
 
 
     /**
