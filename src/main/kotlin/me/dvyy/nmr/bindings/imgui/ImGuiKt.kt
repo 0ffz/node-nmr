@@ -66,6 +66,28 @@ object ImGuiKt {
         if (sliderInt(label, arr, min, max)) onChange(arr[0])
     }
 
+    inline fun colorEdit4(
+        label: String,
+        color: java.awt.Color,
+        onChange: (java.awt.Color) -> Unit,
+        flags: Int = 0,
+    ) {
+        val arr = floatArrayOf(
+            color.red / 255f,
+            color.green / 255f,
+            color.blue / 255f,
+            color.alpha / 255f
+        )
+        if (colorEdit4(label, arr, flags)) {
+            onChange(java.awt.Color(
+                (arr[0] * 255).toInt().coerceIn(0, 255),
+                (arr[1] * 255).toInt().coerceIn(0, 255),
+                (arr[2] * 255).toInt().coerceIn(0, 255),
+                (arr[3] * 255).toInt().coerceIn(0, 255)
+            ))
+        }
+    }
+
     inline fun window(label: String, flags: Int = 0, content: () -> Unit) {
         if (begin(label, flags)) content()
         end()

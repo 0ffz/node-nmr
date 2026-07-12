@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import imgui.ImGui
 import imgui.ImVec2
+import imgui.ImVec4
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
 import imgui.extension.imnodes.flag.ImNodesPinShape
@@ -13,15 +14,21 @@ import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotAxis
 import imgui.extension.implot.flag.ImPlotAxisFlags
 import imgui.extension.implot.flag.ImPlotFlags
+import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiColorEditFlags
 import imgui.flag.ImGuiMouseButton
+import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.graphs.GraphType
+import me.dvyy.nmr.ui.spectra.Icons
+import java.awt.Color
 
 data class NodeUiState(
     val graphType: GraphType = GraphType.FID,
 )
+
 sealed interface Node {
     val id: Int
     val name: String
@@ -34,7 +41,7 @@ sealed interface Node {
         override val name: String,
         override val signalStep: SignalTransformation,
         val inputId: Int,
-        override val outputId: Int
+        override val outputId: Int,
     ) : Node {
         override var state by mutableStateOf(NodeUiState())
     }
@@ -53,18 +60,19 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)
     ImNodes.beginNodeEditor()
     for (node in graph.nodes) {
-        NodeUi(node)
+        NodeUi(node, onDelete = { graph.removeNode(node.id) })
     }
 
-    var linkId = 0
-    graph.links.forEach { inId, outId ->
-        ImNodes.link(inId, inId, outId)
+    graph.links.forEach { link ->
+        val (id, inId, outId) = link
+        ImNodes.link(id, inId, outId)
     }
 //    button("Save") {
 //        ImNodes.saveCurrentEditorStateToIniFile("test.ini")
 //    }
     ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.BottomRight)
     ImNodes.endNodeEditor()
+
     val start = ImInt(0)
     val end = ImInt(0)
     if (ImNodes.isLinkCreated(start, end)) {
@@ -83,14 +91,34 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
         println("Clicked $link")
         graph.unlink(link)
     }
+
+    // Drag and drop to create new nodes
+    if (ImGui.beginDragDropTarget()) {
+        val payloadData = ImGui.acceptDragDropPayload<SignalTransformation>("node")
+        if (payloadData != null) {
+            val mouseX = ImGui.getMousePosX()
+            val mouseY = ImGui.getMousePosY()
+            val node = graph.addTransform(payloadData)
+            ImNodes.setNodeScreenSpacePos(node.id, mouseX, mouseY)
+        }
+        ImGui.endDragDropTarget()
+    }
 }
 
-
-fun ImGuiKt.NodeUi(node: Node) {
+fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
     ImNodes.beginNode(node.id);
 
     ImNodes.beginNodeTitleBar();
     ImGui.text(node.name);
+    ImGui.sameLine()
+    ImGui.pushStyleColor(ImGuiCol.Button, 0.0f, 0.0f, 0.0f, 0.0f);
+    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1.0f, 1.0f, 1.0f, 0.1f);
+    ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 5.0f)
+    if(ImGui.button(Icons.delete)) {
+        onDelete()
+    }
+    ImGui.popStyleVar()
+    ImGui.popStyleColor(2)
     ImNodes.endNodeTitleBar();
 
     when (node) {
@@ -114,19 +142,20 @@ fun ImGuiKt.NodeUi(node: Node) {
     }
 
 
-    if (node is Node.Process) {
-        val states = node.signalStep.parameters
-        ImGui.pushItemWidth(100f)
-        for (param in states) {
-            val value = param.state.value
-            when (value) {
-                is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
-                is Int -> sliderInt(param.name, value, 0, 10, onChange = { (param.state as MutableState<Int>).value = it })
+    ImGui.pushItemWidth(100f)
+    val states = node.signalStep.parameters
+    for (param in states) {
+        val value = param.state.value
+        when (value) {
+            is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
+            is Int -> sliderInt(param.name, value, 0, 10, onChange = { (param.state as MutableState<Int>).value = it })
+            is Color -> {
+                colorEdit4(param.name, value, { (param.state as MutableState<Color>).value = it }, flags = ImGuiColorEditFlags.NoInputs)
             }
-
         }
-        ImGui.popItemWidth()
+
     }
+    ImGui.popItemWidth()
 
     section("Plot", defaultOpen = false, flags = ImGuiTreeNodeFlags.SpanLabelWidth) {
 
@@ -146,7 +175,7 @@ fun ImGuiKt.NodeUi(node: Node) {
             ImPlot.setupAxis(ImPlotAxis.Y1, "y", ImPlotAxisFlags.AutoFit)
 
             val value = node.signalStep.output.value ?: return@plot
-            val data = when(node.state.graphType) {
+            val data = when (node.state.graphType) {
                 GraphType.FID -> value.graphFid
                 GraphType.FFT -> value.graphFft
                 GraphType.WAVELET -> TODO()
