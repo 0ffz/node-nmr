@@ -13,10 +13,6 @@ internal object FftwBindings {
     }
 
     private val linker = Linker.nativeLinker()
-
-    // Loads the system-installed fftw3 library. 
-    // Ensure "fftw3.dll" (Win), "libfftw3.so" (Linux), or "libfftw3.dylib" (Mac) is in your library path.
-//    private val fftwLib = SymbolLookup.libraryLookup("fftw3", Arena.global())
     val fftwLib = SymbolLookup.loaderLookup()
 
     private fun lookup(name: String) = fftwLib.find(name)

@@ -6,7 +6,7 @@ import me.dvyy.nmr.bindings.fftw.FftwDirection.FORWARD
 import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.Sizes
-import me.dvyy.nmr.bindings.propack.AprodOperator
+import me.dvyy.nmr.bindings.propack.LinearOperator
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -22,23 +22,23 @@ class HankelOperator(
     private val hankelData: MemorySegment,
     private val rows: Int,
     private val cols: Int,
-) : AprodOperator {
+) : LinearOperator {
 
     // 1. Calculate length and optimal padding length (next power of 2 for maximum FFT efficiency)
     private val targetLen = rows + cols - 1
     private val fftLength = MathHelpers.nextPowerOfTwo(targetLen)
 
     // 2. Pre-allocate dedicated buffers for FFT operations to avoid allocations during multiply()
-    private val fftIn = with(arena) { FftwComplexArray.alloc(fftLength) }
-    private val fftOut = with(arena) { FftwComplexArray.alloc(fftLength) }
+    private val fftIn = with(arena) { FftwComplexArray(fftLength) }
+    private val fftOut = with(arena) { FftwComplexArray(fftLength) }
 
     // 3. Pre-computed FFTs of the defining vector
-    private val fidFft = with(arena) { FftwComplexArray.alloc(fftLength) }
-    private val fidConjFft = with(arena) { FftwComplexArray.alloc(fftLength) }
+    private val fidFft = with(arena) { FftwComplexArray(fftLength) }
+    private val fidConjFft = with(arena) { FftwComplexArray(fftLength) }
 
     // 4. Reusable forward and backward transform plans using the pre-allocated buffers
-    private val planForward = FftwPlan1D(fftLength, fftIn, fftOut, FORWARD, FftwFlag.ESTIMATE)
-    private val planBackward = FftwPlan1D(fftLength, fftIn, fftOut, BACKWARD, FftwFlag.ESTIMATE)
+    private val planForward =  with(arena) {FftwPlan1D(fftLength, fftIn, fftOut, FORWARD, FftwFlag.ESTIMATE) }
+    private val planBackward =  with(arena) { FftwPlan1D(fftLength, fftIn, fftOut, BACKWARD, FftwFlag.ESTIMATE) }
 
     init {
         val requiredBytes = targetLen * Sizes.COMPLEX
@@ -77,8 +77,8 @@ class HankelOperator(
         // Slicing offset identical to cols - 1 or rows - 1 based on translation logic
         val validStart = inputLength - 1
         val precomputedFftData = if (transpose) fidConjFft else fidFft
-        val input = FftwComplexArray(input)
-        val output = FftwComplexArray(output)
+        val input = FftwComplexArray.fromSegment(input)
+        val output = FftwComplexArray.fromSegment(output)
 
         // Copy input as reversed into fftIn, with end padding being 0s (we want a power of 2 length for a faster fft)
         fftIn.segment.fill(0.toByte())

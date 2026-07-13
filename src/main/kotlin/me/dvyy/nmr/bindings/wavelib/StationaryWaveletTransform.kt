@@ -30,13 +30,13 @@ class StationaryWaveletTransform(
             val directStr = arena.allocateFrom("direct")
 
             // wave_object obj = wave_init(name);
-            waveObj = WavelibNative.WAVE_INIT.invokeExact(nameStr) as MemorySegment
+            waveObj = WavelibBindings.WAVE_INIT.invokeExact(nameStr) as MemorySegment
 
             // wt_object wt = wt_init(obj, "swt", N, J);
-            wtObj = (WavelibNative.WT_INIT.invokeExact(waveObj, swtStr, signalLength, level) as MemorySegment).reinterpret(WavelibNative.WT_SET_LAYOUT.byteSize())
+            wtObj = (WavelibBindings.WT_INIT.invokeExact(waveObj, swtStr, signalLength, level) as MemorySegment).reinterpret(WavelibBindings.WT_SET_LAYOUT.byteSize())
 
             // setWTConv(wt, "direct");
-            WavelibNative.SET_WT_CONV.invokeExact(wtObj, directStr)
+            WavelibBindings.SET_WT_CONV.invokeExact(wtObj, directStr)
 
         } catch (e: Throwable) {
             arena.close()
@@ -57,11 +57,11 @@ class StationaryWaveletTransform(
         val inpSegment = arena.allocateFrom(ValueLayout.JAVA_DOUBLE, *input)
 
         // swt(wt, inp);
-        WavelibNative.SWT.invokeExact(wtObj, inpSegment)
+        WavelibBindings.SWT.invokeExact(wtObj, inpSegment)
 
         // Read wt->outlength and wt->output pointers directly from the struct
-        val outLength = wtObj.get(ValueLayout.JAVA_INT, WavelibNative.OUTLENGTH_OFFSET)
-        val outputPtr = wtObj.get(ValueLayout.ADDRESS, WavelibNative.OUTPUT_OFFSET)
+        val outLength = wtObj.get(ValueLayout.JAVA_INT, WavelibBindings.OUTLENGTH_OFFSET)
+        val outputPtr = wtObj.get(ValueLayout.ADDRESS, WavelibBindings.OUTPUT_OFFSET)
 
         // Reinterpret the opaque output pointer as an array of known length
         val outputSegment = outputPtr.reinterpret((outLength * ValueLayout.JAVA_DOUBLE.byteSize()).toLong())
@@ -79,7 +79,7 @@ class StationaryWaveletTransform(
         val outSegment = arena.allocate(ValueLayout.JAVA_DOUBLE, signalLength.toLong())
 
         // iswt(wt, out);
-        WavelibNative.ISWT.invokeExact(wtObj, outSegment)
+        WavelibBindings.ISWT.invokeExact(wtObj, outSegment)
 
         return outSegment.toArray(ValueLayout.JAVA_DOUBLE)
     }
@@ -92,13 +92,13 @@ class StationaryWaveletTransform(
      */
     fun inverse(modifiedCoefficients: DoubleArray? = null): DoubleArray {
         if (modifiedCoefficients != null) {
-            val outLength = wtObj.get(ValueLayout.JAVA_INT, WavelibNative.OUTLENGTH_OFFSET)
+            val outLength = wtObj.get(ValueLayout.JAVA_INT, WavelibBindings.OUTLENGTH_OFFSET)
             require(modifiedCoefficients.size == outLength) {
                 "Modified coefficients size (${modifiedCoefficients.size}) must match outLength ($outLength)."
             }
 
             // 1. Get the native pointer to wt->output and reinterpret its bounds
-            val outputPtr = wtObj.get(ValueLayout.ADDRESS, WavelibNative.OUTPUT_OFFSET)
+            val outputPtr = wtObj.get(ValueLayout.ADDRESS, WavelibBindings.OUTPUT_OFFSET)
             val outputSegment = outputPtr.reinterpret((outLength * ValueLayout.JAVA_DOUBLE.byteSize()).toLong())
 
             // 2. Allocate a temporary native segment for the user's array
@@ -112,7 +112,7 @@ class StationaryWaveletTransform(
         val outSegment = arena.allocate(ValueLayout.JAVA_DOUBLE, signalLength.toLong())
 
         // iswt(wt, out);
-        WavelibNative.ISWT.invokeExact(wtObj, outSegment)
+        WavelibBindings.ISWT.invokeExact(wtObj, outSegment)
 
         return outSegment.toArray(ValueLayout.JAVA_DOUBLE)
     }
@@ -122,8 +122,8 @@ class StationaryWaveletTransform(
      */
     override fun close() {
         try {
-            WavelibNative.WT_FREE.invokeExact(wtObj)
-            WavelibNative.WAVE_FREE.invokeExact(waveObj)
+            WavelibBindings.WT_FREE.invokeExact(wtObj)
+            WavelibBindings.WAVE_FREE.invokeExact(waveObj)
         } finally {
             arena.close()
         }

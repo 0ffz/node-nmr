@@ -6,7 +6,7 @@ import java.lang.invoke.MethodHandle
 import java.util.function.Supplier
 
 
-object WavelibNative {
+object WavelibBindings {
     init {
         NativeLoader.loadLibrary("wavelib")
     }

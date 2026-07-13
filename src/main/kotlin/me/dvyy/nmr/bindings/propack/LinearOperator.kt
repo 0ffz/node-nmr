@@ -3,12 +3,13 @@ package me.dvyy.nmr.bindings.propack
 import java.lang.foreign.MemorySegment
 
 /**
- * High-performance, zero-allocation callback for matrix-vector multiplication.
- * Fortran signature: SUBROUTINE APROD(TRANSA,M,N,X,Y,ZPARM,IPARM)
+ * Defines matrix-vector multiplication, used by propack to calculate SVD.
+ *
+ * Fortran signature: `SUBROUTINE APROD(TRANSA,M,N,X,Y,ZPARM,IPARM)`
  */
-fun interface AprodOperator {
+fun interface LinearOperator {
     /**
-     * Computes Y = A * X (if transpose is false) or Y = A^H * X (if transpose is true).
+     * Computes `Y = A * X` (if transpose is false) or `Y = A^H * X` (if transpose is true).
      * X is supplied as [input] and Y should be written to [output]
      *
      * @param transpose If true, apply the conjugate transpose (adjoint).

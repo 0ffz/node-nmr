@@ -1,13 +1,13 @@
 package me.dvyy.nmr.svd
 
-import me.dvyy.nmr.bindings.propack.AprodOperator
+import me.dvyy.nmr.bindings.propack.LinearOperator
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
 
 /**
  * A simple but slow implementation of Hankel matrix multiplication to be able to test correctness of the sped up FFT convolution method.
  */
-class HankelOperatorBruteForce(private val hankelData: MemorySegment) : AprodOperator {
+class HankelOperatorBruteForce(private val hankelData: MemorySegment) : LinearOperator {
     override fun multiply(
         transpose: Boolean,
         inputLength: Int,

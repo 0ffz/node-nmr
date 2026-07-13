@@ -30,17 +30,13 @@ sealed class Signal {
             else memScoped {
                 val data = fid.data
                 val size = fid.size
-                val input = FftwComplexArray.alloc(size)
-                val output = FftwComplexArray.alloc(size)
+                val input = FftwComplexArray(size)
+                val output = FftwComplexArray(size)
                 val plan = FftwPlan1D(size, input, output, FftwDirection.FORWARD, FftwFlag.ESTIMATE)
                 input.loadInterleaved(data)
                 plan.execute()
 
-                ComplexDoubleArray(output.toInterleavedArray()).fftShift().also {
-                    plan.close()
-                    input.close()
-                    output.close()
-                }
+                ComplexDoubleArray(output.toInterleavedArray()).fftShift()
             }.also { fft ->
                 fft.data.asF64Array().let { it /= it.max() }
             }
@@ -55,8 +51,8 @@ sealed class Signal {
             else memScoped {
                 val data = fft.data
                 val size = fft.size
-                val input = FftwComplexArray.alloc(size)
-                val output = FftwComplexArray.alloc(size)
+                val input = FftwComplexArray(size)
+                val output = FftwComplexArray(size)
                 val plan = FftwPlan1D(size, input, output, FftwDirection.BACKWARD, FftwFlag.ESTIMATE)
                 input.loadInterleaved(fft.inverseFftShift().data)
                 plan.execute()

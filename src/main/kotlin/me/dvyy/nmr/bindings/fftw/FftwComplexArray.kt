@@ -1,6 +1,5 @@
 package me.dvyy.nmr.bindings.fftw
 
-import me.dvyy.nmr.bindings.fftw.FftwComplexArray.Companion.alloc
 import me.dvyy.nmr.bindings.helpers.Sizes
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
@@ -13,9 +12,9 @@ import java.lang.foreign.ValueLayout
  * Must be closed to free native memory.
  */
 @JvmInline
-value class FftwComplexArray(
+value class FftwComplexArray private constructor(
     val segment: MemorySegment,
-) : AutoCloseable {
+) {
     val size: Int get() = (segment.byteSize() / Sizes.COMPLEX).toInt()
 
     init {
@@ -41,8 +40,8 @@ value class FftwComplexArray(
         return ComplexDouble(real, imag)
     }
 
-    fun getReal(index:Int): Double =  segment.get(ValueLayout.JAVA_DOUBLE, index * 16L)
-    fun getImag(index:Int): Double =  segment.get(ValueLayout.JAVA_DOUBLE, index * 16L + 8L)
+    fun getReal(index: Int): Double = segment.get(ValueLayout.JAVA_DOUBLE, index * 16L)
+    fun getImag(index: Int): Double = segment.get(ValueLayout.JAVA_DOUBLE, index * 16L + 8L)
 
     /** Populates the native memory using an interleaved double array (real, imag, real, imag...). */
     fun loadInterleaved(data: DoubleArray) {
@@ -71,23 +70,21 @@ value class FftwComplexArray(
         }
     }
 
-    override fun close() {
-        if (segment != MemorySegment.NULL) {
-            FftwBindings.free.invokeExact(segment)
-        }
-    }
-
     companion object {
         context(arena: Arena)
-        fun alloc(size: Int): FftwComplexArray {
+        operator fun invoke(size: Int): FftwComplexArray {
             val byteSize = size * Sizes.COMPLEX
-            return FftwComplexArray((FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize))
+            return FftwComplexArray((FftwBindings.malloc.invokeExact(byteSize) as MemorySegment).reinterpret(byteSize, arena) {
+                FftwBindings.free.invokeExact(it)
+            })
         }
+
+        fun fromSegment(segment: MemorySegment) = FftwComplexArray(segment)
     }
 }
 
 context(arena: Arena)
-fun ComplexDoubleArray.toFFTWArray(): FftwComplexArray = alloc(size).apply {
+fun ComplexDoubleArray.toFFTWArray(): FftwComplexArray = FftwComplexArray(size).apply {
     loadInterleaved(this@toFFTWArray.data)
     return this
 }

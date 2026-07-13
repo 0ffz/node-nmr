@@ -1,5 +1,6 @@
 package me.dvyy.nmr.bindings.fftw
 
+import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 /**
@@ -7,17 +8,8 @@ import java.lang.foreign.MemorySegment
  * Note: Creating the plan may overwrite `inArray` if the `FFTW_MEASURE` flag is used.
  */
 class FftwPlan1D(
-    val size: Int,
-    inArray: FftwComplexArray,
-    outArray: FftwComplexArray,
-    direction: FftwDirection,
-    vararg flags: FftwFlag = arrayOf(FftwFlag.ESTIMATE)
-) : AutoCloseable {
-    private val flattenedFlags = flags.fold(0) { acc, flag -> acc or flag.value }
-    private val planPointer: MemorySegment = FftwBindings
-        .planDft1d
-        .invokeExact(size, inArray.segment, outArray.segment, direction.value, flattenedFlags) as MemorySegment
-
+    val planPointer: MemorySegment,
+) {
     init {
         if (planPointer == MemorySegment.NULL) {
             throw RuntimeException("Failed to create FFTW plan.")
@@ -29,9 +21,21 @@ class FftwPlan1D(
         FftwBindings.execute.invokeExact(planPointer)
     }
 
-    override fun close() {
-        if (planPointer != MemorySegment.NULL) {
-            FftwBindings.destroyPlan.invokeExact(planPointer)
+    companion object {
+        context(arena: Arena)
+        operator fun invoke(
+            size: Int,
+            inArray: FftwComplexArray,
+            outArray: FftwComplexArray,
+            direction: FftwDirection,
+            vararg flags: FftwFlag = arrayOf(FftwFlag.ESTIMATE)
+        ): FftwPlan1D {
+            val flattenedFlags = flags.fold(0) { acc, flag -> acc or flag.value }
+            val planPointer: MemorySegment = (FftwBindings
+                .planDft1d
+                .invokeExact(size, inArray.segment, outArray.segment, direction.value, flattenedFlags) as MemorySegment)
+                .reinterpret(1, arena) { FftwBindings.destroyPlan.invokeExact(it) }
+            return FftwPlan1D(planPointer)
         }
     }
 }

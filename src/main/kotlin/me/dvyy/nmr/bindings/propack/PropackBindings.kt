@@ -1,17 +1,23 @@
-package me.dvyy.nmr.propack
+package me.dvyy.nmr.bindings.propack
 
 import me.dvyy.nmr.bindings.helpers.Sizes
-import me.dvyy.nmr.bindings.propack.AprodOperator
-import me.dvyy.nmr.bindings.propack.ComputeVectors
-import me.dvyy.nmr.bindings.propack.SingularTripletTarget
+import org.scijava.nativelib.NativeLoader
 import java.lang.foreign.*
+import java.lang.foreign.ValueLayout.JAVA_BYTE
+import java.lang.foreign.ValueLayout.JAVA_INT
 import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 
-object PropackZlansvd {
+object PropackBindings {
+    init {
+        NativeLoader.loadLibrary("blas") //FIXME we currently don't include in project and error message is not clear when this fails
+        NativeLoader.loadLibrary("lapack")
+        NativeLoader.loadLibrary("propack_common")
+        NativeLoader.loadLibrary("zpropack")
+    }
 
     private val linker = Linker.nativeLinker()
-    
+
     // Note: Fortran compilers usually lowercase the name and append an underscore.
     private val ZLANSVD_IRL_DESC = FunctionDescriptor.ofVoid(
         *Array(28) { ValueLayout.ADDRESS }
@@ -151,7 +157,7 @@ object PropackZlansvd {
      *
      * (C) Rasmus Munk Larsen, Stanford University, 2000,2004
      */
-    fun compute(
+    fun zlansvdIrl(
         arena: Arena,
         target: SingularTripletTarget,
         computeU: ComputeVectors,
@@ -162,7 +168,7 @@ object PropackZlansvd {
         shiftsPerRestart: Int,
         numWanted: Int,
         maxRestarts: Int,
-        aprod: AprodOperator,
+        aprod: LinearOperator,
         uMatrix: MemorySegment,
         ldu: Int,
         sigmaValues: MemorySegment,
@@ -182,22 +188,22 @@ object PropackZlansvd {
         iParm: MemorySegment,
     ): Int {
         // 1. Allocate scalar pointers in the provided Arena
-        val pWhich = arena.allocateFrom(ValueLayout.JAVA_BYTE, target.code)
-        val pJobU = arena.allocateFrom(ValueLayout.JAVA_BYTE, computeU.code)
-        val pJobV = arena.allocateFrom(ValueLayout.JAVA_BYTE, computeV.code)
-        val pM = arena.allocateFrom(ValueLayout.JAVA_INT, mRows)
-        val pN = arena.allocateFrom(ValueLayout.JAVA_INT, nCols)
-        val pDim = arena.allocateFrom(ValueLayout.JAVA_INT, dim)
-        val pP = arena.allocateFrom(ValueLayout.JAVA_INT, shiftsPerRestart)
-        val pNWanted = arena.allocateFrom(ValueLayout.JAVA_INT, numWanted)
-        val pMaxIter = arena.allocateFrom(ValueLayout.JAVA_INT, maxRestarts)
-        val pLdu = arena.allocateFrom(ValueLayout.JAVA_INT, ldu)
-        val pLdv = arena.allocateFrom(ValueLayout.JAVA_INT, ldv)
+        val pWhich = arena.allocateFrom(JAVA_BYTE, target.code)
+        val pJobU = arena.allocateFrom(JAVA_BYTE, computeU.code)
+        val pJobV = arena.allocateFrom(JAVA_BYTE, computeV.code)
+        val pM = arena.allocateFrom(JAVA_INT, mRows)
+        val pN = arena.allocateFrom(JAVA_INT, nCols)
+        val pDim = arena.allocateFrom(JAVA_INT, dim)
+        val pP = arena.allocateFrom(JAVA_INT, shiftsPerRestart)
+        val pNWanted = arena.allocateFrom(JAVA_INT, numWanted)
+        val pMaxIter = arena.allocateFrom(JAVA_INT, maxRestarts)
+        val pLdu = arena.allocateFrom(JAVA_INT, ldu)
+        val pLdv = arena.allocateFrom(JAVA_INT, ldv)
         val pTolin = arena.allocateFrom(ValueLayout.JAVA_DOUBLE, tolerance)
-        val pLWork = arena.allocateFrom(ValueLayout.JAVA_INT, workSize)
-        val pLZWork = arena.allocateFrom(ValueLayout.JAVA_INT, zWorkSize)
-        val pLIWork = arena.allocateFrom(ValueLayout.JAVA_INT, iWorkSize)
-        val pInfo = arena.allocateFrom(ValueLayout.JAVA_INT, 0) // Output parameter
+        val pLWork = arena.allocateFrom(JAVA_INT, workSize)
+        val pLZWork = arena.allocateFrom(JAVA_INT, zWorkSize)
+        val pLIWork = arena.allocateFrom(JAVA_INT, iWorkSize)
+        val pInfo = arena.allocateFrom(JAVA_INT, 0) // Output parameter
 
         // 2. Setup the Upcall Stub for APROD
         val aprodStub = createAprodStub(arena, aprod)
@@ -211,39 +217,51 @@ object PropackZlansvd {
         )
 
         // 4. Return the resulting info code
-        return pInfo.get(ValueLayout.JAVA_INT, 0L)
+        return pInfo.get(JAVA_INT, 0L)
     }
 
     /**
      * Binds the Kotlin lambda to a native function pointer.
      */
-    private fun createAprodStub(arena: Arena, operator: AprodOperator): MemorySegment {
+    private fun createAprodStub(arena: Arena, operator: LinearOperator): MemorySegment {
         // We need a static-like method to bind to MethodHandles. 
-        // We use a local proxy instance to route the static call back to our specific operator.
-        val proxy = AprodProxy(operator)
+        // We use a local stub instance to route the static call back to our specific operator.
+        val proxy = LinearOperatorStub(operator)
         val handle = MethodHandles.lookup().bind(
-            proxy, 
-            "invoke", 
-            MethodType.methodType(Void.TYPE, 
-                MemorySegment::class.java, MemorySegment::class.java, MemorySegment::class.java,
-                MemorySegment::class.java, MemorySegment::class.java, MemorySegment::class.java, MemorySegment::class.java
+            proxy,
+            "invoke",
+            MethodType.methodType(
+                Void.TYPE,
+                MemorySegment::class.java,
+                MemorySegment::class.java,
+                MemorySegment::class.java,
+                MemorySegment::class.java,
+                MemorySegment::class.java,
+                MemorySegment::class.java,
+                MemorySegment::class.java
             )
         )
         return linker.upcallStub(handle, APROD_DESC, arena)
     }
-    // A helper class to route the raw memory segments to our Kotlin interface
-    private class AprodProxy(private val op: AprodOperator) {
+
+    /** A helper class to route raw memory segments to [LinearOperator] */
+    private class LinearOperatorStub(private val op: LinearOperator) {
         fun invoke(
-            pTransa: MemorySegment, pM: MemorySegment, pN: MemorySegment,
-            pX: MemorySegment, pY: MemorySegment, pZparm: MemorySegment, pIparm: MemorySegment
+            pTransa: MemorySegment,
+            pM: MemorySegment,
+            pN: MemorySegment,
+            pX: MemorySegment,
+            pY: MemorySegment,
+            pZparm: MemorySegment,
+            pIparm: MemorySegment,
         ) {
             // 1. Reinterpret the zero-length scalar pointers BEFORE reading!
             // pTransa is a single character (1 byte)
-            val transChar = pTransa.reinterpret(1L).get(ValueLayout.JAVA_BYTE, 0L).toInt().toChar()
+            val transChar = pTransa.reinterpret(1L).get(JAVA_BYTE, 0L).toInt().toChar()
 
             // pM and pN are standard 32-bit integers (4 bytes)
-            val m = pM.reinterpret(4L).get(ValueLayout.JAVA_INT, 0L)
-            val n = pN.reinterpret(4L).get(ValueLayout.JAVA_INT, 0L)
+            val m = pM.reinterpret(4L).get(JAVA_INT, 0L)
+            val n = pN.reinterpret(4L).get(JAVA_INT, 0L)
 
             val transpose = transChar == 'C' || transChar == 'c'
 

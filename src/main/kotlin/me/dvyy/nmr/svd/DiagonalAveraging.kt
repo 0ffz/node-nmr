@@ -16,13 +16,13 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {
 
     // 1. Allocate Workspaces Once
     // Note: arena.allocate() guarantees zero-initialized memory in Java FFM.
-    val uTime = FftwComplexArray.alloc(size)
-    val uFreq = FftwComplexArray.alloc(size)
-    val vTime = FftwComplexArray.alloc(size)
-    val vFreq = FftwComplexArray.alloc(size)
+    val uTime = FftwComplexArray(size)
+    val uFreq = FftwComplexArray(size)
+    val vTime = FftwComplexArray(size)
+    val vFreq = FftwComplexArray(size)
 
-    val accumFreq = FftwComplexArray.alloc(size)
-    val resultTime = FftwComplexArray.alloc(size)
+    val accumFreq = FftwComplexArray(size)
+    val resultTime = FftwComplexArray(size)
 
     // 2. Create Plans (FftwFlag.ESTIMATE is safe to use before populating data)
     val planU = FftwPlan1D(size, uTime, uFreq, FftwDirection.FORWARD, FftwFlag.ESTIMATE)

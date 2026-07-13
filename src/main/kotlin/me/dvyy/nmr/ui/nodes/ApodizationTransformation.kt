@@ -4,8 +4,10 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import me.dvyy.nmr.bindings.helpers.memScoped
-import me.dvyy.nmr.bindings.propack.propack
+import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.bindings.propack.Propack
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
 import me.dvyy.nmr.phasecorrect.phaseCorrect
@@ -78,11 +80,11 @@ class PhaseCorrectTransformation : SignalTransformation() {
 
 class SVDTransformation : SignalTransformation() {
     override val name: String = "SVD"
-    val numValues = mutableStateOf(10)
+    var numValues by mutableStateOf(10)
 
-    override val parameters: List<NodeAttribute> = listOf(
-        NodeAttribute("numValues", numValues)
-    )
+    override fun ImGuiKt.drawParams() {
+        sliderInt("numValues", numValues, min = 1, max = 100, onChange = { numValues = it })
+    }
 
     // TODO long-running background calculations
     override val output: State<Signal?> = derivedStateOf {
@@ -92,7 +94,7 @@ class SVDTransformation : SignalTransformation() {
         val denoised = memScoped {
 //                val hankel = HankelOperatorBruteForce(fid.toMemorySegment())
             val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
-            val result = propack(hankel, rows, cols, numWanted = numValues.value)
+            val result = Propack.partialComplexSVD(hankel, rows, cols, numWanted = numValues)
 //            svdResults += result.singularValues
             result.reconstructDiagonals()
         }
