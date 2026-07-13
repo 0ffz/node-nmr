@@ -1,8 +1,10 @@
-package me.dvyy.nmr.ui.nodes
+package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.*
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.ui.nodes.NodeAttribute
+import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
 class WaveletTransformation() : SignalTransformation() {
@@ -21,10 +23,10 @@ class WaveletTransformation() : SignalTransformation() {
     private val inputFftRe by derivedStateOf { input?.fft?.real() }
     private val inputFftIm by derivedStateOf { input?.fft?.im() }
 
-    override val output: State<Signal?> = derivedStateOf {
-        val fftRe = inputFftRe ?: return@derivedStateOf null
-        val fftIm = inputFftIm ?: return@derivedStateOf null
-        if (fftRe.isEmpty()) return@derivedStateOf null
+    override val output: State<Signal> = derivedStateOf {
+        val fftRe = inputFftRe ?: return@derivedStateOf Signal.Empty
+        val fftIm = inputFftIm ?: return@derivedStateOf Signal.Empty
+        if (fftRe.isEmpty()) return@derivedStateOf Signal.Empty
         val denoisedRe = WaveletHelpers.waveletDenoise(
             fftRe,
             threshold.value,

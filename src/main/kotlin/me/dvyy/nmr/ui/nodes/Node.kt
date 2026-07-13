@@ -3,6 +3,8 @@ package me.dvyy.nmr.ui.nodes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
 
 sealed interface Node {
     val id: Int

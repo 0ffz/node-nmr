@@ -5,6 +5,7 @@ import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotAxis
 import imgui.extension.implot.flag.ImPlotAxisFlags
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.ui.nodes.Node
 
 fun ImGuiKt.GraphScreen(
@@ -24,17 +25,20 @@ fun ImGuiKt.GraphScreen(
     subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.SHARE_ITEMS) {
         plot("Spectra") {
             nodes.forEach { node ->
-                val signal = node.signalStep.output.value ?: return@forEach
+                val signal = node.signalStep.output.value
+                if(signal != Signal.Empty) {
 //                val spec = implotSpec {
 //                    if (spectrum.color != null) lineColor = spectrum.color
 //                }
-                line(node.name, signal.graphFid/*, spec = spec*/)
+                    line(node.name, signal.graphFid/*, spec = spec*/)
+                }
             }
         }
         plot("FFT") {
             ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
             nodes.forEach {
-                val signal = it.signalStep.output.value ?: return@forEach
+                val signal = it.signalStep.output.value
+                if(signal != Signal.Empty) {
 //                val spec = implotSpec {
 //                    if (spectrum.color != null) lineColor = spectrum.color
 //                }
@@ -55,7 +59,8 @@ fun ImGuiKt.GraphScreen(
 //                    else -> 1.0
 //                }
 
-                line(it.name, signal.graphFft)//, xStart = offset, xScale = scale, spec = spec)
+                    line(it.name, signal.graphFft)//, xStart = offset, xScale = scale, spec = spec)
+                }
             }
         }
     }

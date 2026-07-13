@@ -43,21 +43,21 @@ fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
         }
 
 
-        ImGui.pushItemWidth(100f)
-        val states = node.signalStep.parameters
-        for (param in states) {
-            val value = param.state.value
-            when (value) {
-                is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
-                is Int -> sliderInt(param.name, value, 0, 50, onChange = { (param.state as MutableState<Int>).value = it })
-                is Color -> {
-                    colorEdit4(param.name, value, { (param.state as MutableState<Color>).value = it }, flags = ImGuiColorEditFlags.NoInputs)
+        withItemWidth(100f) {
+            val states = node.signalStep.parameters
+            for (param in states) {
+                val value = param.state.value
+                when (value) {
+                    is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
+                    is Int -> sliderInt(param.name, value, 0, 50, onChange = { (param.state as MutableState<Int>).value = it })
+                    is Color -> {
+                        colorEdit4(param.name, value, { (param.state as MutableState<Color>).value = it }, flags = ImGuiColorEditFlags.NoInputs)
+                    }
                 }
-            }
 
+            }
+            with(node.signalStep) { drawParams() }
         }
-        with(node.signalStep) { drawParams() }
-        ImGui.popItemWidth()
 
 //    section("Plot", defaultOpen = false, flags = ImGuiTreeNodeFlags.SpanLabelWidth) {
 //

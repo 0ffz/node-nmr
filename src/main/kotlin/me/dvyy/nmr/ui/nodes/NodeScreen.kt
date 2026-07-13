@@ -6,6 +6,7 @@ import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
 import imgui.flag.*
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
 
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)

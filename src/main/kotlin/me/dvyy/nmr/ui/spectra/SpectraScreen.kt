@@ -4,12 +4,12 @@ import imgui.ImGui
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
-import me.dvyy.nmr.ui.nodes.ApodizationTransformation
-import me.dvyy.nmr.ui.nodes.PhaseCorrectTransformation
-import me.dvyy.nmr.ui.nodes.SVDTransformation
-import me.dvyy.nmr.ui.nodes.SignalTransformation
-import me.dvyy.nmr.ui.nodes.WaveletTransformation
-import me.dvyy.nmr.ui.nodes.ZeroFillTransformation
+import me.dvyy.nmr.ui.nodes.transformations.ApodizationTransformation
+import me.dvyy.nmr.ui.nodes.transformations.PhaseCorrectTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SVDTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
+import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
+import me.dvyy.nmr.ui.nodes.transformations.ZeroFillTransformation
 
 fun ImGuiKt.SpectraScreen(state: SpectrumViewModel) {
     val spectra = state.spectra

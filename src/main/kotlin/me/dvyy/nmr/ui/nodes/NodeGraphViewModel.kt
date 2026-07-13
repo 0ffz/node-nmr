@@ -7,6 +7,10 @@ import imgui.extension.imnodes.ImNodes
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import me.dvyy.nmr.parsing.BrukerDataset
+import me.dvyy.nmr.ui.nodes.transformations.ApodizationTransformation
+import me.dvyy.nmr.ui.nodes.transformations.PhaseCorrectTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
+import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
 
 data class NodeLink(
     val id: Int,

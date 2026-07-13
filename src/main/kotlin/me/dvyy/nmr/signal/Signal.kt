@@ -1,4 +1,4 @@
-package me.dvyy.nmr.ui.nodes
+package me.dvyy.nmr.signal
 
 import me.dvyy.nmr.bindings.fftw.FftwComplexArray
 import me.dvyy.nmr.bindings.fftw.FftwDirection
@@ -6,10 +6,17 @@ import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.fftShift
-import me.dvyy.nmr.signal.inverseFftShift
+import me.dvyy.nmr.complex.complexDoubleArrayOf
+import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
+import me.dvyy.nmr.phasecorrect.phaseCorrect
 import org.jetbrains.bio.viktor.asF64Array
 
+/**
+ * A 1D signal backed by an underlying type (ex. original fid, fourier-transformed, etc...)
+ *
+ * This allows transformations that work in fourier or wavelet spaces to keep their output in the same space
+ * and save on operations/floating point errors.
+ */
 sealed class Signal {
     abstract val fid: ComplexDoubleArray
     abstract val fft: ComplexDoubleArray
@@ -19,7 +26,8 @@ sealed class Signal {
         fid.real().also { it.asF64Array().let { it /= it.max() } }
     }
     val graphFft: DoubleArray by lazy {
-        fft.real()
+        val (p0, p1) = fft.findOptimalPhaseParameters()
+        fft.phaseCorrect(p0, p1).real()
     }
     val graphWavelet: DoubleArray by lazy { wavelet.real() }
 
@@ -62,5 +70,11 @@ sealed class Signal {
         override val fft: ComplexDoubleArray = data
         override val wavelet: ComplexDoubleArray
             get() = TODO("Not yet implemented")
+    }
+
+    data object Empty: Signal() {
+        override val fid: ComplexDoubleArray = complexDoubleArrayOf()
+        override val fft: ComplexDoubleArray = complexDoubleArrayOf()
+        override val wavelet: ComplexDoubleArray = complexDoubleArrayOf()
     }
 }

@@ -4,42 +4,11 @@ import imgui.ImGui
 import imgui.ImGui.*
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
-import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.extension.implot.ImPlot
-import imgui.extension.implot.ImPlotSpec
 import imgui.extension.implot.flag.ImPlotFlags
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImDouble
 import kotlin.math.abs
-
-fun implotSpec(block: ImPlotSpec.() -> Unit) = ImPlotSpec().apply(block)
-
-object ImPlotContext {
-    fun line(name: String, data: DoubleArray, xScale: Double = 1.0, xStart: Double = 0.0, spec: ImPlotSpec? = null) {
-        if (spec == null) ImPlot.plotLine(name, data, xScale, xStart)
-        else ImPlot.plotLine(name, data, xScale, xStart, spec)
-    }
-}
-
-object ImNodeContext {
-    inline fun inputAttribute(id: Int, shape: Int = ImNodesPinShape.CircleFilled, content: () -> Unit) {
-        ImNodes.beginInputAttribute(id, shape)
-        content()
-        ImNodes.endInputAttribute()
-    }
-
-    inline fun outputAttribute(id: Int, shape: Int = ImNodesPinShape.CircleFilled, content: () -> Unit) {
-        ImNodes.beginOutputAttribute(id, shape)
-        content()
-        ImNodes.endOutputAttribute()
-    }
-
-    inline fun nodeTitleBar(content: () -> Unit) {
-        ImNodes.beginNodeTitleBar()
-        content()
-        ImNodes.endNodeTitleBar()
-    }
-}
 
 object ImGuiKt {
     inline fun text(text: String) {
@@ -186,5 +155,11 @@ object ImGuiKt {
             content()
             ImPlot.endSubplots()
         }
+    }
+
+    inline fun withItemWidth(width: Float, content: () -> Unit) {
+        pushItemWidth(width)
+        content()
+        popItemWidth()
     }
 }

@@ -7,8 +7,8 @@ import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
 import me.dvyy.nmr.ui.nodes.NodeAttribute
-import me.dvyy.nmr.ui.nodes.Signal
-import me.dvyy.nmr.ui.nodes.SignalProviding
+import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
 import org.jetbrains.bio.viktor.asF64Array
 import java.awt.Color
 import java.io.File
@@ -155,7 +155,7 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
         return complexList
     }
 
-    override val output: State<Signal?> = derivedStateOf {
+    override val output: State<Signal> = derivedStateOf {
         val data = readFid().removeDigitalFilter(acqus)
         data.data.asF64Array().let { it /= it.max() }
         Signal.Fid(data)

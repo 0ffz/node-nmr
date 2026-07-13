@@ -1,10 +1,6 @@
-package me.dvyy.nmr.ui.nodes
+package me.dvyy.nmr.ui.nodes.transformations
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.propack.Propack
@@ -16,6 +12,8 @@ import me.dvyy.nmr.signal.gaussApodized
 import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.MathHelpers
 import me.dvyy.nmr.svd.reconstructDiagonals
+import me.dvyy.nmr.ui.nodes.NodeAttribute
+import me.dvyy.nmr.signal.Signal
 
 class ApodizationTransformation() : SignalTransformation() {
     override val name: String = "Apodization"
@@ -31,8 +29,8 @@ class ApodizationTransformation() : SignalTransformation() {
     private val cache by derivedStateOf { ComplexDoubleArray(size) }
     private val inputFid by derivedStateOf { input?.fid?.data }
 
-    override val output: State<Signal?> = derivedStateOf {
-        if (size == 0) return@derivedStateOf null
+    override val output: State<Signal> = derivedStateOf {
+        if (size == 0) return@derivedStateOf Signal.Empty
         inputFid?.copyInto(cache.data)
         cache.expApodized(lb.value).gaussApodized(gauss.value)
         Signal.Fid(cache)
@@ -47,8 +45,8 @@ class ZeroFillTransformation : SignalTransformation() {
         val target = MathHelpers.nextPowerOfTwo(size + 1000)
         ComplexDoubleArray(target)
     }
-    override val output: State<Signal?> = derivedStateOf {
-        if (size == 0) return@derivedStateOf null
+    override val output: State<Signal> = derivedStateOf {
+        if (size == 0) return@derivedStateOf Signal.Empty
         cache.data.fill(0.0)
         input?.fid?.data?.copyInto(cache.data)
         Signal.Fid(cache)
@@ -67,8 +65,8 @@ class PhaseCorrectTransformation : SignalTransformation() {
         NodeAttribute("p1", p1)
     )
 
-    override val output: State<Signal?> = derivedStateOf {
-        if (size == 0) return@derivedStateOf null
+    override val output: State<Signal> = derivedStateOf {
+        if (size == 0) return@derivedStateOf Signal.Empty
         input?.fft?.data?.copyInto(cache.data)
         val (p0, p1) = cache.findOptimalPhaseParameters()
         this.p0.value = p0
@@ -87,8 +85,8 @@ class SVDTransformation : SignalTransformation() {
     }
 
     // TODO long-running background calculations
-    override val output: State<Signal?> = derivedStateOf {
-        val fid = input?.fid ?: return@derivedStateOf null
+    override val output: State<Signal> = derivedStateOf {
+        val fid = input?.fid ?: return@derivedStateOf Signal.Empty
         val rows = fid.size / 2
         val cols = fid.size - rows + 1
         val denoised = memScoped {
