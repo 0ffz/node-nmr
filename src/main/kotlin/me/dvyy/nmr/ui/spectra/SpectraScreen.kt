@@ -5,9 +5,11 @@ import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.nodes.ApodizationTransformation
-import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
+import me.dvyy.nmr.ui.nodes.PhaseCorrectTransformation
+import me.dvyy.nmr.ui.nodes.SVDTransformation
 import me.dvyy.nmr.ui.nodes.SignalTransformation
 import me.dvyy.nmr.ui.nodes.WaveletTransformation
+import me.dvyy.nmr.ui.nodes.ZeroFillTransformation
 
 fun ImGuiKt.SpectraScreen(state: SpectrumViewModel) {
     val spectra = state.spectra
@@ -15,8 +17,11 @@ fun ImGuiKt.SpectraScreen(state: SpectrumViewModel) {
 //        SpectrumOptions(spectrum, onDelete = { state.deleteSpectrum(index)})
 //    }
 
-    DragDropTransformationSource("Apodization", { ApodizationTransformation() })
-    DragDropTransformationSource("Wavelet denoise", { WaveletTransformation() })
+    DragDropTransformationSource("Apodization") { ApodizationTransformation() }
+    DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
+    DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
+    DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
+    DragDropTransformationSource("SVDTransformation") { SVDTransformation() }
 }
 
 private inline fun ImGuiKt.SpectrumOptions(

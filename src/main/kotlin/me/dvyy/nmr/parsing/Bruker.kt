@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
-import me.dvyy.nmr.ui.nodes.Parameter
+import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.ui.nodes.Signal
 import me.dvyy.nmr.ui.nodes.SignalProviding
 import org.jetbrains.bio.viktor.asF64Array
@@ -63,8 +63,8 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
     private val dir = File(directoryPath)
     private val procFile = dir.toPath() / "pdata" / "1" / "procs"
     var color = mutableStateOf<Color>(Color.red)
-    override val parameters: List<Parameter> = listOf(
-        Parameter("Color", color)
+    override val parameters: List<NodeAttribute> = listOf(
+//        Parameter("Color", color)
     )
 
     init {

@@ -17,16 +17,12 @@ import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.synthetic.Resonance
-import me.dvyy.nmr.synthetic.addGaussianNoise
-import me.dvyy.nmr.synthetic.generateNmrSignal
-import me.dvyy.nmr.ui.Colors
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
-import me.dvyy.nmr.ui.processing.ControlScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.SpectraScreen
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -35,10 +31,11 @@ import imgui.internal.ImGui as ImGuiInternal
 
 @OptIn(ExperimentalAtomicApi::class)
 class Main : Application() {
+    val context = ImPlot.createContext()
     val scope = CoroutineScope(Dispatchers.IO)
     val state = SpectrumViewModel(scope)
     val nodeGraph = NodeGraphViewModel(
-        dataset = BrukerDataset("data/13C_lowsignal/27")
+        dataset = BrukerDataset("data/13C_lowsignal/28")
     )
     val menuViewModel = MenuViewModel(scope, nodeGraph)
 
@@ -82,26 +79,26 @@ class Main : Application() {
 //            Resonance(amplitude = 10.0, frequencyHz = 150.0, phaseRadians = 0.0, t2StarSeconds = 0.05),
             Resonance(amplitude = 5.0, frequencyHz = -50.0, phaseRadians = 0.0, t2StarSeconds = 0.1)
         )
-        state.loadSpectrum(
-            "Synthetic",
-            generateNmrSignal(
-                16384,
-                dwellTime,
-                peaks
-            ).addGaussianNoise(1.0),
-            0.0, 0.0, 0.0,1.0
-        )
-        state.loadSpectrum(
-            "Synthetic",
-            generateNmrSignal(
-                16384,
-                dwellTime,
-                peaks
-            ),
-            0.0, 0.0, 0.0,1.0
-        )
-        state.loadSpectrum("Dirty", brukerData, color = Colors.backgroundGray)
-        state.loadSpectrum("Clean", cleanData)
+//        state.loadSpectrum(
+//            "Synthetic",
+//            generateNmrSignal(
+//                16384,
+//                dwellTime,
+//                peaks
+//            ).addGaussianNoise(1.0),
+//            0.0, 0.0, 0.0,1.0
+//        )
+//        state.loadSpectrum(
+//            "Synthetic",
+//            generateNmrSignal(
+//                16384,
+//                dwellTime,
+//                peaks
+//            ),
+//            0.0, 0.0, 0.0,1.0
+//        )
+//        state.loadSpectrum("Dirty", brukerData, color = Colors.backgroundGray)
+//        state.loadSpectrum("Clean", cleanData)
     }
 
 
@@ -145,9 +142,6 @@ class Main : Application() {
             }
         }
 
-//        window("Controls") {
-//            ControlScreen(state)
-//        }
         window("Singular Values") {
             SingularValuesGraph(state)
         }
@@ -162,6 +156,5 @@ class Main : Application() {
 
 
 fun main() {
-    ImPlot.createContext()
     Application.launch(Main())
 }

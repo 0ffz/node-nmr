@@ -11,17 +11,18 @@ fun ComplexDoubleArray.expApodized(
 
     forEachIndexed { index, complex ->
         val decay = exp(-Math.PI * lb * index)
-        this[index] = ComplexDouble(complex.re * decay, complex.im * decay)
+        this[index] = complex * decay
     }
     return this
 }
 
 fun ComplexDoubleArray.gaussApodized(
-    lb: Double,
+    a: Double,
 ): ComplexDoubleArray {
+    if (a == 0.0) return this
     forEachIndexed { index, complex ->
-        val decay = exp(-Math.PI * lb * (index.toLong() * index.toLong()))
-        this[index] = ComplexDouble(complex.re * decay, complex.im * decay)
+        val decay = exp(-0.01 * a * (index.toLong() * index.toLong()))
+        this[index] = complex * decay
     }
     return this
 }

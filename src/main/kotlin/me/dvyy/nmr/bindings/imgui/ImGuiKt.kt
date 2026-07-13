@@ -3,6 +3,8 @@ package me.dvyy.nmr.bindings.imgui
 import imgui.ImGui
 import imgui.ImGui.*
 import imgui.ImVec2
+import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.ImPlotSpec
 import imgui.extension.implot.flag.ImPlotFlags
@@ -16,6 +18,26 @@ object ImPlotContext {
     fun line(name: String, data: DoubleArray, xScale: Double = 1.0, xStart: Double = 0.0, spec: ImPlotSpec? = null) {
         if (spec == null) ImPlot.plotLine(name, data, xScale, xStart)
         else ImPlot.plotLine(name, data, xScale, xStart, spec)
+    }
+}
+
+object ImNodeContext {
+    inline fun inputAttribute(id: Int, shape: Int = ImNodesPinShape.CircleFilled, content: () -> Unit) {
+        ImNodes.beginInputAttribute(id, shape)
+        content()
+        ImNodes.endInputAttribute()
+    }
+
+    inline fun outputAttribute(id: Int, shape: Int = ImNodesPinShape.CircleFilled, content: () -> Unit) {
+        ImNodes.beginOutputAttribute(id, shape)
+        content()
+        ImNodes.endOutputAttribute()
+    }
+
+    inline fun nodeTitleBar(content: () -> Unit) {
+        ImNodes.beginNodeTitleBar()
+        content()
+        ImNodes.endNodeTitleBar()
     }
 }
 
@@ -79,12 +101,14 @@ object ImGuiKt {
             color.alpha / 255f
         )
         if (colorEdit4(label, arr, flags)) {
-            onChange(java.awt.Color(
-                (arr[0] * 255).toInt().coerceIn(0, 255),
-                (arr[1] * 255).toInt().coerceIn(0, 255),
-                (arr[2] * 255).toInt().coerceIn(0, 255),
-                (arr[3] * 255).toInt().coerceIn(0, 255)
-            ))
+            onChange(
+                java.awt.Color(
+                    (arr[0] * 255).toInt().coerceIn(0, 255),
+                    (arr[1] * 255).toInt().coerceIn(0, 255),
+                    (arr[2] * 255).toInt().coerceIn(0, 255),
+                    (arr[3] * 255).toInt().coerceIn(0, 255)
+                )
+            )
         }
     }
 
@@ -110,6 +134,18 @@ object ImGuiKt {
         pushStyleVar(styleVar, x, y)
         content()
         popStyleVar()
+    }
+
+    inline fun withStyle(styleVar: Int, value: Float, content: () -> Unit) {
+        pushStyleVar(styleVar, value)
+        content()
+        popStyleVar()
+    }
+
+    inline fun node(id: Int, content: ImNodeContext.() -> Unit) {
+        ImNodes.beginNode(id)
+        content(ImNodeContext)
+        ImNodes.endNode()
     }
 
     inline fun plot(

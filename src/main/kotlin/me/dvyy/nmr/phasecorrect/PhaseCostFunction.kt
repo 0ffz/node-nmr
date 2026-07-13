@@ -1,4 +1,5 @@
 package me.dvyy.nmr.phasecorrect
+
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import org.apache.commons.math3.analysis.MultivariateFunction
 import org.apache.commons.math3.optim.InitialGuess
@@ -7,6 +8,11 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer
+
+data class PhaseParams(
+    val p0: Double,
+    val p1: Double,
+)
 
 /**
  * 1. The Objective (Cost) Function
@@ -42,10 +48,10 @@ class PhaseCostFunction(private val rawData: ComplexDoubleArray) : MultivariateF
  * 2. The Automation Routine
  * Uses Nelder-Mead to find the optimal angles.
  */
-fun autoPhaseSpectrum(rawData: ComplexDoubleArray): Pair<Double, Double> {
+fun ComplexDoubleArray.findOptimalPhaseParameters(): PhaseParams {
     // Tolerances for the optimizer to declare "convergence"
     val optimizer = SimplexOptimizer(1e-4, 1e-4)
-    val costFunction = PhaseCostFunction(rawData)
+    val costFunction = PhaseCostFunction(this)
 
     // Start guessing at 0 degrees for both p0 and p1
     val initialGuess = InitialGuess(doubleArrayOf(0.0, 0.0))
@@ -55,19 +61,19 @@ fun autoPhaseSpectrum(rawData: ComplexDoubleArray): Pair<Double, Double> {
     val simplex = NelderMeadSimplex(doubleArrayOf(10.0, 10.0))
 
     // Run the optimizer
-    val optimum = optimizer.optimize(
-        MaxEval(2000),                 // Don't loop infinitely
-        ObjectiveFunction(costFunction),
-        GoalType.MINIMIZE,             // We want the lowest negativity score
-        initialGuess,
-        simplex
-    )
+    val (p0, p1) = try {
+        optimizer.optimize(
+            MaxEval(2000),                 // Don't loop infinitely
+            ObjectiveFunction(costFunction),
+            GoalType.MINIMIZE,             // We want the lowest negativity score
+            initialGuess,
+            simplex
+        ).point!!
+    } catch (e: Exception) {
+        println("Error while finding optimal phase parameters:")
+        e.printStackTrace()
+        doubleArrayOf(0.0, 0.0)
+    }
 
-    // optimum.point contains [best_p0, best_p1]
-    val bestP0 = optimum.point[0]
-    val bestP1 = optimum.point[1]
-
-    println("Optimization complete! Best p0: ${"%.2f".format(bestP0)}°, p1: ${"%.2f".format(bestP1)}°")
-
-    return bestP0 to bestP1
+    return PhaseParams(p0, p1)
 }

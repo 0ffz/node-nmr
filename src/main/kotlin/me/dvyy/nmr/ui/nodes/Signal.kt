@@ -6,9 +6,8 @@ import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.phasecorrect.autoPhaseSpectrum
-import me.dvyy.nmr.phasecorrect.phaseCorrect
 import me.dvyy.nmr.signal.fftShift
+import me.dvyy.nmr.signal.inverseFftShift
 import org.jetbrains.bio.viktor.asF64Array
 
 sealed class Signal {
@@ -36,10 +35,12 @@ sealed class Signal {
                 val plan = FftwPlan1D(size, input, output, FftwDirection.FORWARD, FftwFlag.ESTIMATE)
                 input.loadInterleaved(data)
                 plan.execute()
-                val unphased = ComplexDoubleArray(output.toInterleavedArray()).fftShift()
-                val (p0, p1) = autoPhaseSpectrum(unphased)
-                unphased
-                    .phaseCorrect(p0, p1)
+
+                ComplexDoubleArray(output.toInterleavedArray()).fftShift().also {
+                    plan.close()
+                    input.close()
+                    output.close()
+                }
             }.also { fft ->
                 fft.data.asF64Array().let { it /= it.max() }
             }
@@ -57,7 +58,7 @@ sealed class Signal {
                 val input = FftwComplexArray.alloc(size)
                 val output = FftwComplexArray.alloc(size)
                 val plan = FftwPlan1D(size, input, output, FftwDirection.BACKWARD, FftwFlag.ESTIMATE)
-                input.loadInterleaved(data)
+                input.loadInterleaved(fft.inverseFftShift().data)
                 plan.execute()
                 ComplexDoubleArray(output.toInterleavedArray())
             }

@@ -1,60 +1,11 @@
 package me.dvyy.nmr.ui.nodes
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import imgui.ImGui
-import imgui.ImVec2
-import imgui.ImVec4
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
-import imgui.extension.imnodes.flag.ImNodesPinShape
-import imgui.extension.implot.ImPlot
-import imgui.extension.implot.flag.ImPlotAxis
-import imgui.extension.implot.flag.ImPlotAxisFlags
-import imgui.extension.implot.flag.ImPlotFlags
-import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiColorEditFlags
-import imgui.flag.ImGuiMouseButton
-import imgui.flag.ImGuiStyleVar
-import imgui.flag.ImGuiTreeNodeFlags
+import imgui.flag.*
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.ui.graphs.GraphType
-import me.dvyy.nmr.ui.spectra.Icons
-import java.awt.Color
-
-data class NodeUiState(
-    val graphType: GraphType = GraphType.FID,
-)
-
-sealed interface Node {
-    val id: Int
-    val name: String
-    val signalStep: SignalProviding
-    val outputId: Int
-    var state: NodeUiState
-
-    data class Process(
-        override val id: Int,
-        override val name: String,
-        override val signalStep: SignalTransformation,
-        val inputId: Int,
-        override val outputId: Int,
-    ) : Node {
-        override var state by mutableStateOf(NodeUiState())
-    }
-
-    data class Input(
-        override val id: Int,
-        override val name: String,
-        override val signalStep: SignalProviding,
-        override val outputId: Int,
-    ) : Node {
-        override var state by mutableStateOf(NodeUiState())
-    }
-}
 
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)
@@ -105,85 +56,3 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     }
 }
 
-fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
-    ImNodes.beginNode(node.id);
-
-    ImNodes.beginNodeTitleBar();
-    ImGui.text(node.name);
-    ImGui.sameLine()
-    ImGui.pushStyleColor(ImGuiCol.Button, 0.0f, 0.0f, 0.0f, 0.0f);
-    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1.0f, 1.0f, 1.0f, 0.1f);
-    ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, 5.0f)
-    if(ImGui.button(Icons.delete)) {
-        onDelete()
-    }
-    ImGui.popStyleVar()
-    ImGui.popStyleColor(2)
-    ImNodes.endNodeTitleBar();
-
-    when (node) {
-        is Node.Process -> {
-//            ImNodes.pushColorStyle(ImNodesCol.Pin, ImColor.rgb("ffffffff"))
-            ImNodes.beginInputAttribute(node.inputId, ImNodesPinShape.CircleFilled);
-            ImGui.text("In");
-            ImNodes.endInputAttribute();
-//            ImNodes.popColorStyle()
-            ImGui.sameLine();
-            ImNodes.beginOutputAttribute(node.outputId);
-            ImGui.text("Out");
-            ImNodes.endOutputAttribute();
-        }
-
-        is Node.Input -> {
-            ImNodes.beginOutputAttribute(node.outputId);
-            ImGui.text("Out");
-            ImNodes.endOutputAttribute();
-        }
-    }
-
-
-    ImGui.pushItemWidth(100f)
-    val states = node.signalStep.parameters
-    for (param in states) {
-        val value = param.state.value
-        when (value) {
-            is Double -> dragDouble(param.name, value, onChange = { (param.state as MutableState<Double>).value = it })
-            is Int -> sliderInt(param.name, value, 0, 10, onChange = { (param.state as MutableState<Int>).value = it })
-            is Color -> {
-                colorEdit4(param.name, value, { (param.state as MutableState<Color>).value = it }, flags = ImGuiColorEditFlags.NoInputs)
-            }
-        }
-
-    }
-    ImGui.popItemWidth()
-
-    section("Plot", defaultOpen = false, flags = ImGuiTreeNodeFlags.SpanLabelWidth) {
-
-        ImGui.pushItemWidth(100f)
-        if (ImGui.beginCombo("Spectrum", node.state.graphType.name)) {
-            GraphType.entries.forEachIndexed { index, type ->
-                if (ImGui.selectable(type.name, index == type.ordinal)) {
-                    node.state = node.state.copy(graphType = type)
-                }
-            }
-            ImGui.endCombo()
-        }
-
-        ImGui.popItemWidth()
-        plot("fid", ImVec2(400f, 200f), flags = ImPlotFlags.NoTitle) {
-            ImPlot.setupAxis(ImPlotAxis.X1, "x", ImPlotAxisFlags.AutoFit)
-            ImPlot.setupAxis(ImPlotAxis.Y1, "y", ImPlotAxisFlags.AutoFit)
-
-            val value = node.signalStep.output.value ?: return@plot
-            val data = when (node.state.graphType) {
-                GraphType.FID -> value.graphFid
-                GraphType.FFT -> value.graphFft
-                GraphType.WAVELET -> TODO()
-            } ?: return@plot
-            line("fid", data)
-        }
-
-    }
-
-    ImNodes.endNode();
-}

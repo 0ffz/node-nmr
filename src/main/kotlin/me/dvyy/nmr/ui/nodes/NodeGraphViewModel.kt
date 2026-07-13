@@ -24,16 +24,18 @@ class NodeGraphViewModel(
     val editorContext = ImNodes.editorContextCreate()
 
     var id = 1
-    var nodes by mutableStateOf<PersistentList<Node>>(
-        persistentListOf(
-            Node.Process(id++, "Apodization", ApodizationTransformation(), id++, id++),
-            Node.Process(id++, "Wavelet", WaveletTransformation(), id++, id++),
-            Node.Input(id++, "Dataset", dataset, id++)
-        )
-    )
+    var nodes by mutableStateOf<PersistentList<Node>>(persistentListOf())
     private val _links = mutableSetOf<NodeLink>()
     private val linkIds = mutableListOf<Int>()
     val links: Set<NodeLink> = _links
+
+    init {
+        val dataset = loadDataset(dataset, "Example dataset")
+        addTransform(ApodizationTransformation())
+        addTransform(WaveletTransformation())
+        val phase = addTransform(PhaseCorrectTransformation())
+        link(dataset, phase)
+    }
 
     /**
      * Links the output of an [input] node to the input of an [output] node
@@ -55,16 +57,19 @@ class NodeGraphViewModel(
 
     fun removeNode(id: Int) {
         val index = nodes.indexOfFirst { it.id == id }.takeIf { it != -1 } ?: return
+        val node = nodes[index]
         nodes = nodes.removeAt(index)
-        _links.removeIf { it.from == id || it.to == id }
+        _links.removeIf { it.from == node.outputId || it.to == (node as? Node.Process)?.inputId }
     }
 
-    fun loadDataset(dataset: BrukerDataset, name: String) {
-        nodes = nodes.add(Node.Input(id++, name, dataset, id++))
+    fun loadDataset(dataset: BrukerDataset, name: String): Node.Input {
+        val node = Node.Input(id++, name, dataset, id++)
+        nodes = nodes.add(node)
+        return node
     }
 
-    fun addTransform(transform: SignalTransformation): Node {
-        val node = Node.Process(id++, transform::class.simpleName ?: "Untitled", transform, id++, id++)
+    fun addTransform(transform: SignalTransformation): Node.Process {
+        val node = Node.Process(id++, transform.name, transform, id++, id++)
         nodes = nodes.add(node)
         return node
     }

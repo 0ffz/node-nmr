@@ -1,6 +1,5 @@
 package me.dvyy.nmr.phasecorrect
 
-import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.exp
 import me.dvyy.nmr.complex.j

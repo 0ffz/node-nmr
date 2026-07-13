@@ -5,12 +5,13 @@ import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
 class WaveletTransformation() : SignalTransformation() {
+    override val name: String = "Wavelet denoise"
     var threshold = mutableStateOf(0.0001)
     var level = mutableStateOf(4)
 
-    override val parameters: List<Parameter> = listOf(
-        Parameter("threshold", threshold),
-        Parameter("level", level)
+    override val parameters: List<NodeAttribute> = listOf(
+        NodeAttribute("threshold", threshold),
+        NodeAttribute("level", level)
     )
 
     private val inputFftRe by derivedStateOf { input?.fft?.real() }
