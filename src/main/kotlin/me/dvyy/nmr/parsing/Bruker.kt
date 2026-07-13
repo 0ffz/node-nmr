@@ -2,15 +2,15 @@ package me.dvyy.nmr.parsing
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
+import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
 import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
 import org.jetbrains.bio.viktor.asF64Array
-import java.awt.Color
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -62,7 +62,6 @@ data class AcquisitionParams(
 class BrukerDataset(private val directoryPath: String) : SignalProviding {
     private val dir = File(directoryPath)
     private val procFile = dir.toPath() / "pdata" / "1" / "procs"
-    var color = mutableStateOf<Color>(Color.red)
     override val parameters: List<NodeAttribute> = listOf(
 //        Parameter("Color", color)
     )
@@ -155,10 +154,14 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
         return complexList
     }
 
-    override val output: State<Signal> = derivedStateOf {
+    override val output: State<SignalUiState?> = derivedStateOf {
         val data = readFid().removeDigitalFilter(acqus)
         data.data.asF64Array().let { it /= it.max() }
-        Signal.Fid(data)
+        val fid =  Signal.Fid(data)
+        SignalUiState(
+            signal = fid,
+            phaseParams = data.findOptimalPhaseParameters()
+        )
     }
 }
 

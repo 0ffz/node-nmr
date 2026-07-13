@@ -23,10 +23,10 @@ class WaveletTransformation() : SignalTransformation() {
     private val inputFftRe by derivedStateOf { input?.fft?.real() }
     private val inputFftIm by derivedStateOf { input?.fft?.im() }
 
-    override val output: State<Signal> = derivedStateOf {
-        val fftRe = inputFftRe ?: return@derivedStateOf Signal.Empty
-        val fftIm = inputFftIm ?: return@derivedStateOf Signal.Empty
-        if (fftRe.isEmpty()) return@derivedStateOf Signal.Empty
+    override fun transform(): Signal {
+        val fftRe = inputFftRe ?: return Signal.Empty
+        val fftIm = inputFftIm ?: return Signal.Empty
+        if (fftRe.isEmpty()) return Signal.Empty
         val denoisedRe = WaveletHelpers.waveletDenoise(
             fftRe,
             threshold.value,
@@ -38,6 +38,6 @@ class WaveletTransformation() : SignalTransformation() {
             level
         )
 
-        Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
+        return Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
     }
 }

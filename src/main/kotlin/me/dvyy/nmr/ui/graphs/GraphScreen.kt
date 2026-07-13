@@ -25,7 +25,7 @@ fun ImGuiKt.GraphScreen(
     subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.SHARE_ITEMS) {
         plot("Spectra") {
             nodes.forEach { node ->
-                val signal = node.signalStep.output.value
+                val signal = node.signalStep.output.value ?: return@forEach
                 if(signal != Signal.Empty) {
 //                val spec = implotSpec {
 //                    if (spectrum.color != null) lineColor = spectrum.color
@@ -37,7 +37,7 @@ fun ImGuiKt.GraphScreen(
         plot("FFT") {
             ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
             nodes.forEach {
-                val signal = it.signalStep.output.value
+                val signal = it.signalStep.output.value ?: return@forEach
                 if(signal != Signal.Empty) {
 //                val spec = implotSpec {
 //                    if (spectrum.color != null) lineColor = spectrum.color

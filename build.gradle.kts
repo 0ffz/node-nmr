@@ -46,7 +46,9 @@ kotlin {
 
 application {
     mainClass.set("me.dvyy.nmr.MainKt")
-    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+    applicationDefaultJvmArgs = listOf(
+        "--enable-native-access=ALL-UNNAMED"
+    )
 }
 
 tasks {
