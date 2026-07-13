@@ -5,16 +5,7 @@ import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotAxis
 import imgui.extension.implot.flag.ImPlotAxisFlags
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.bindings.imgui.implotSpec
 import me.dvyy.nmr.ui.nodes.Node
-
-object ImplotSubplotFlags {
-    val SHARE_ITEMS = 1 shl 5
-}
-
-enum class GraphType {
-    FID, FFT, WAVELET
-}
 
 fun ImGuiKt.GraphScreen(
     type: GraphType,

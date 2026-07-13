@@ -76,6 +76,10 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
     val acqu2s: Map<String, String> by lazy { JcampDxParser.parse(File(dir, "acqu2s")) }
     val procs: Map<String, String> by lazy { JcampDxParser.parse(procFile.toFile()) }
 
+    val totalSpectralWidth by lazy { procs["SW_p"]!!.toDouble() }
+    val spectrometerFrequency by lazy { procs["SF"]!!.toDouble() }
+    val offset by lazy { procs["OFFSET"]?.toDouble() ?: 0.0 }
+
     // Strongly typed parameters extracted from the dictionary
     val params: AcquisitionParams by lazy {
         val td = acqus["TD"]?.toIntOrNull() ?: throw IllegalStateException("Missing TD in acqus")

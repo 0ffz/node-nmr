@@ -25,9 +25,6 @@ data class SpectrumUiState(
 ) {
     var visible: Boolean by mutableStateOf(true)
 
-    val spectrum = DoubleArray(spectrumUnprocessed.size)
-    val processing = ComplexDoubleArray(spectrumUnprocessed.size)
-
 }
 
 //class SpectrumGraph(state: SpectrumUiState) {
