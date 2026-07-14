@@ -13,6 +13,7 @@ import org.jetbrains.bio.viktor.asF64Array
 
 data class SignalUiState(
     val signal: Signal,
+    val offset: Double,
     val phaseParams: PhaseParams
 ) {
     val graphFid: DoubleArray by lazy {
@@ -37,7 +38,7 @@ sealed class Signal {
     abstract val fft: ComplexDoubleArray
     abstract val wavelet: ComplexDoubleArray
 
-    data class Fid(val data: ComplexDoubleArray) : Signal() {
+    class Fid(val data: ComplexDoubleArray) : Signal() {
         override val fid: ComplexDoubleArray = data
         override val fft: ComplexDoubleArray by lazy {
             if (fid.size == 0) fid
@@ -59,7 +60,7 @@ sealed class Signal {
             get() = TODO("Not yet implemented")
     }
 
-    data class Fft(val data: ComplexDoubleArray) : Signal() {
+    class Fft(val data: ComplexDoubleArray) : Signal() {
         override val fid: ComplexDoubleArray by lazy {
             if (fft.size == 0) fft
             else memScoped {

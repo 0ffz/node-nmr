@@ -2,13 +2,17 @@ package me.dvyy.nmr.parsing
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.toComplexArray
 import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
-import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.signal.SignalUiState
+import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
 import org.jetbrains.bio.viktor.asF64Array
 import java.io.File
@@ -77,7 +81,9 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
 
     val totalSpectralWidth by lazy { procs["SW_p"]!!.toDouble() }
     val spectrometerFrequency by lazy { procs["SF"]!!.toDouble() }
-    val offset by lazy { procs["OFFSET"]?.toDouble() ?: 0.0 }
+
+    //    val offset by lazy { procs["OFFSET"]?.toDouble() ?: 0.0 }
+    var offset by mutableStateOf(procs["OFFSET"]?.toDouble() ?: 0.0)
 
     // Strongly typed parameters extracted from the dictionary
     val params: AcquisitionParams by lazy {
@@ -157,11 +163,16 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
     override val output: State<SignalUiState?> = derivedStateOf {
         val data = readFid().removeDigitalFilter(acqus)
         data.data.asF64Array().let { it /= it.max() }
-        val fid =  Signal.Fid(data)
+        val fid = Signal.Fid(data)
         SignalUiState(
             signal = fid,
+            offset = offset,
             phaseParams = data.findOptimalPhaseParameters()
         )
+    }
+
+    override fun ImGuiKt.drawParams() {
+        dragDouble("offset", offset, onChange = { offset = it })
     }
 }
 

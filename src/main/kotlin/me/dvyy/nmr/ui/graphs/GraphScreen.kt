@@ -59,7 +59,7 @@ fun ImGuiKt.GraphScreen(
 //                    else -> 1.0
 //                }
 
-                    line(it.name, signal.graphFft)//, xStart = offset, xScale = scale, spec = spec)
+                    line(it.name, signal.graphFft, xStart = signal.offset)//, xStart = offset, xScale = scale, spec = spec)
                 }
             }
         }

@@ -12,6 +12,7 @@ import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiDir
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
@@ -25,9 +26,30 @@ import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.SpectraScreen
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.coroutines.CoroutineContext
 import imgui.internal.ImGui as ImGuiInternal
+
+class TriggeredCoroutineDispatcher(val name: String) : CoroutineDispatcher() {
+    private val taskQueue = ConcurrentLinkedQueue<Runnable>()
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) {
+        taskQueue.add(block)
+    }
+
+    internal fun executeDispatchedTasks() {
+        while (taskQueue.isNotEmpty()) {
+            val task = taskQueue.poll()
+            task.run()
+        }
+    }
+}
+
+object AppDispatchers {
+    val Frontend = TriggeredCoroutineDispatcher("Frontend")
+}
 
 @OptIn(ExperimentalAtomicApi::class)
 class Main : Application() {
@@ -38,6 +60,7 @@ class Main : Application() {
         dataset = BrukerDataset("data/13C_lowsignal/28")
     )
     val menuViewModel = MenuViewModel(scope, nodeGraph)
+    val uiScope = CoroutineScope(Dispatchers.Main)
 
     private val applyScheduled = AtomicBoolean(false)
     private val snapshotHandle = Snapshot.registerGlobalWriteObserver {
@@ -121,6 +144,7 @@ class Main : Application() {
         if (applyScheduled.compareAndSet(expectedValue = true, newValue = false)) {
             Snapshot.sendApplyNotifications()
         }
+        AppDispatchers.Frontend.executeDispatchedTasks()
 
         val dockspaceId = ImGui.dockSpaceOverViewport()
         mainMenuBar {

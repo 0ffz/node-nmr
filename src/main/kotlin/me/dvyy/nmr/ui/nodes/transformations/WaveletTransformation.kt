@@ -1,10 +1,14 @@
 package me.dvyy.nmr.ui.nodes.transformations
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
 class WaveletTransformation() : SignalTransformation() {
@@ -23,21 +27,25 @@ class WaveletTransformation() : SignalTransformation() {
     private val inputFftRe by derivedStateOf { input?.fft?.real() }
     private val inputFftIm by derivedStateOf { input?.fft?.im() }
 
-    override fun transform(): Signal {
-        val fftRe = inputFftRe ?: return Signal.Empty
-        val fftIm = inputFftIm ?: return Signal.Empty
-        if (fftRe.isEmpty()) return Signal.Empty
-        val denoisedRe = WaveletHelpers.waveletDenoise(
-            fftRe,
-            threshold.value,
-            level
-        )
-        val denoisedIm = WaveletHelpers.waveletDenoise(
-            fftIm,
-            threshold.value,
-            level
-        )
+    override fun transform(): Deferred<Signal>? {
+        val fftRe = inputFftRe ?: return null
+        val fftIm = inputFftIm ?: return null
+        if (fftRe.isEmpty()) return null
+        threshold.value
+        level
 
-        return Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
+        return compute {
+            val denoisedRe = WaveletHelpers.waveletDenoise(
+                fftRe,
+                threshold.value,
+                level
+            )
+            val denoisedIm = WaveletHelpers.waveletDenoise(
+                fftIm,
+                threshold.value,
+                level
+            )
+            Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
+        }
     }
 }

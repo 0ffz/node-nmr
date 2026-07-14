@@ -1,16 +1,27 @@
 package me.dvyy.nmr.ui.nodes
 
 import androidx.compose.runtime.MutableState
+import imgui.ImColor
 import imgui.ImGui
+import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesCol
 import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiColorEditFlags
 import imgui.flag.ImGuiStyleVar
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.ui.nodes.transformations.ComputeState
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
 import me.dvyy.nmr.ui.spectra.Icons
 import java.awt.Color
 
 fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
+    val isComputing = (node.signalStep as? SignalTransformation)?.state == ComputeState.COMPUTING
+    if(isComputing) {
+        ImNodes.pushColorStyle(ImNodesCol.TitleBar, ImColor.rgb("#525252"))
+        ImNodes.pushColorStyle(ImNodesCol.TitleBarSelected, ImColor.rgb("#525252"))
+        ImNodes.pushColorStyle(ImNodesCol.TitleBarHovered, ImColor.rgb("#737373"))
+    }
     node(node.id) {
         nodeTitleBar {
             text(node.name)
@@ -86,5 +97,10 @@ fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
 //        }
 //
 //    }
+    }
+    if(isComputing) {
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
     }
 }
