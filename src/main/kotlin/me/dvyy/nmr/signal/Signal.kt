@@ -13,8 +13,8 @@ import org.jetbrains.bio.viktor.asF64Array
 
 data class SignalUiState(
     val signal: Signal,
-    val offset: Double,
-    val phaseParams: PhaseParams
+    val offset: Double = 0.0,
+    val phaseParams: PhaseParams = PhaseParams(0.0, 0.0),
 ) {
     val graphFid: DoubleArray by lazy {
         signal.fid.real().also { it.asF64Array().let { it /= it.max() } }

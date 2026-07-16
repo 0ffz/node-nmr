@@ -20,9 +20,17 @@ object ImGuiKt {
         if (sliderFloat(label, arr, min, max, format)) onChange(arr[0])
     }
 
-    inline fun dragFloat(label: String, value: Float, min: Float = 1f, max: Float = 0f, onChange: (Float) -> Unit) {
+    inline fun dragFloat(
+        label: String,
+        value: Float,
+        min: Float = 1f,
+        max: Float = 0f,
+        scaleNearZero: Boolean = true,
+        onChange: (Float) -> Unit,
+    ) {
         val arr = floatArrayOf(value)
         val speed = when {
+            !scaleNearZero -> 0.1f
             abs(value) <= 0.01f -> 0.00001f
             abs(value) <= 0.1f -> 0.0001f
             abs(value) <= 1f -> 0.001f
@@ -39,8 +47,15 @@ object ImGuiKt {
         if (dragFloat(label, arr, speed, min, max, format)) onChange(arr[0])
     }
 
-    inline fun dragDouble(label: String, value: Double, min: Double = 1.0, max: Double = 0.0, onChange: (Double) -> Unit) {
-        dragFloat(label, value.toFloat(), min.toFloat(), max.toFloat(), onChange = { onChange(it.toDouble()) })
+    inline fun dragDouble(
+        label: String,
+        value: Double,
+        min: Double = 1.0,
+        max: Double = 0.0,
+        scaleNearZero: Boolean = true,
+        onChange: (Double) -> Unit,
+    ) {
+        dragFloat(label, value.toFloat(), min.toFloat(), max.toFloat(), scaleNearZero, onChange = { onChange(it.toDouble()) })
     }
 
     inline fun sliderDouble(label: String, value: Double, min: Double, max: Double, format: String = "%.6f", onChange: (Double) -> Unit) {
@@ -86,13 +101,27 @@ object ImGuiKt {
         end()
     }
 
-    inline fun section(
+    inline fun collapsingHeader(
         label: String,
         defaultOpen: Boolean = true,
         flags: Int = 0,
         content: () -> Unit,
     ) {
         if (collapsingHeader(label, flags or (if (defaultOpen) ImGuiTreeNodeFlags.DefaultOpen else 0))) content()
+    }
+
+    inline fun treeNode(
+        label: String,
+        flags: Int = 0,
+        header: () -> Unit = {},
+        content: () -> Unit,
+    ) {
+        val open = treeNodeEx(label, flags)
+        header()
+        if(open) {
+            content()
+            treePop()
+        }
     }
 
     inline fun button(label: String, onClick: () -> Unit) {

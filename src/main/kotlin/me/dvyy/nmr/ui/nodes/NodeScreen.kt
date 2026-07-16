@@ -6,6 +6,8 @@ import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
 import imgui.flag.*
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.ui.nodes.transformations.SignalNode
+import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
 import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
 
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
@@ -28,25 +30,22 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     val start = ImInt(0)
     val end = ImInt(0)
     if (ImNodes.isLinkCreated(start, end)) {
-        println("Link created!")
         val from = graph.nodeForAttribute(start.get()) ?: return
-        val to = graph.nodeForAttribute(end.get()) as? Node.Process ?: return
+        val to = graph.nodeForAttribute(end.get()) ?: return
         graph.link(from, to)
     }
     if (ImNodes.isLinkDestroyed(start)) {
-        println("Link destroyed!")
         graph.unlink(start.get())
     }
 
     if (ImGui.isMouseClicked(ImGuiMouseButton.Right)) {
         val link = ImNodes.getHoveredLink()
-        println("Clicked $link")
         graph.unlink(link)
     }
 
     // Drag and drop to create new nodes
     if (ImGui.beginDragDropTarget()) {
-        val payloadData = ImGui.acceptDragDropPayload<SignalTransformation>("node")
+        val payloadData = ImGui.acceptDragDropPayload<SignalNode>("node")
         if (payloadData != null) {
             val mouseX = ImGui.getMousePosX()
             val mouseY = ImGui.getMousePosY()

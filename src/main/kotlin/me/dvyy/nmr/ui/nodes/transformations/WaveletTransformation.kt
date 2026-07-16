@@ -11,17 +11,14 @@ import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
-class WaveletTransformation() : SignalTransformation() {
+class WaveletTransformation : SignalTransformation() {
     override val name: String = "Wavelet denoise"
-    var threshold = mutableStateOf(0.0001)
+    var threshold by mutableStateOf(0.0001)
     var level by mutableStateOf(4)
-
-    override val parameters: List<NodeAttribute> = listOf(
-        NodeAttribute("threshold", threshold),
-    )
 
     override fun ImGuiKt.drawParams() {
         sliderInt("level", level, min = 1, max = 11, onChange = { level = it })
+        dragDouble("threshold", threshold, onChange = {threshold = it})
     }
 
     private val inputFftRe by derivedStateOf { input?.fft?.real() }
@@ -31,18 +28,18 @@ class WaveletTransformation() : SignalTransformation() {
         val fftRe = inputFftRe ?: return null
         val fftIm = inputFftIm ?: return null
         if (fftRe.isEmpty()) return null
-        threshold.value
+        threshold
         level
 
         return compute {
             val denoisedRe = WaveletHelpers.waveletDenoise(
                 fftRe,
-                threshold.value,
+                threshold,
                 level
             )
             val denoisedIm = WaveletHelpers.waveletDenoise(
                 fftIm,
-                threshold.value,
+                threshold,
                 level
             )
             Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))

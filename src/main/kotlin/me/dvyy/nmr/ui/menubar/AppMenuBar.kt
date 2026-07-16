@@ -9,8 +9,8 @@ fun ImGuiKt.AppMenuBar(
     menu: MenuViewModel
 ) {
     menu("File") {
-        if (menuItem("Exit")) menu.exit()
         if (menuItem("Open")) menu.openFilePicker()
+        if (menuItem("Exit")) menu.exit()
     }
     menu("View") {
         if (menuItem("Reset layout")) state.first = true

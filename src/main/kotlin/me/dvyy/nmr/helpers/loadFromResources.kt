@@ -1,5 +1,6 @@
-package me.dvyy.nmr
+package me.dvyy.nmr.helpers
 
+import me.dvyy.nmr.Main
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths

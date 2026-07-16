@@ -5,9 +5,11 @@ import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.SpectrumUiState
 import me.dvyy.nmr.ui.nodes.transformations.ApodizationTransformation
+import me.dvyy.nmr.ui.nodes.transformations.GraphNode
 import me.dvyy.nmr.ui.nodes.transformations.PhaseCorrectTransformation
 import me.dvyy.nmr.ui.nodes.transformations.SVDTransformation
-import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SignalNode
+import me.dvyy.nmr.ui.nodes.transformations.SyntheticDataset
 import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
 import me.dvyy.nmr.ui.nodes.transformations.ZeroFillTransformation
 
@@ -17,11 +19,20 @@ fun ImGuiKt.SpectraScreen(state: SpectrumViewModel) {
 //        SpectrumOptions(spectrum, onDelete = { state.deleteSpectrum(index)})
 //    }
 
-    DragDropTransformationSource("Apodization") { ApodizationTransformation() }
-    DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
-    DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
-    DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
-    DragDropTransformationSource("SVDTransformation") { SVDTransformation() }
+
+    collapsingHeader("Data sources") {
+        DragDropTransformationSource("Synthetic") { SyntheticDataset() }
+    }
+    collapsingHeader("Outputs") {
+        DragDropTransformationSource("Graph") { GraphNode() }
+    }
+    collapsingHeader("Transformations") {
+        DragDropTransformationSource("Apodization") { ApodizationTransformation() }
+        DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
+        DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
+        DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
+        DragDropTransformationSource("SVDTransformation") { SVDTransformation() }
+    }
 }
 
 private inline fun ImGuiKt.SpectrumOptions(
@@ -44,7 +55,7 @@ private inline fun ImGuiKt.SpectrumOptions(
 
 fun ImGuiKt.DragDropTransformationSource(
     name: String,
-    create: () -> SignalTransformation,
+    create: () -> SignalNode,
 ) {
     ImGui.button(name)
     if (ImGui.beginDragDropSource()) {

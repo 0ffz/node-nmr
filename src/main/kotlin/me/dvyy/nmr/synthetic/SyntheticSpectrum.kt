@@ -6,6 +6,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
+import java.util.Random
 
 /**
  * Data class representing a single NMR resonance.
@@ -58,5 +59,9 @@ fun generateNmrSignal(
 }
 
 
-fun ComplexDoubleArray.addGaussianNoise(strength: Double) =
-    this.mapComplex { ComplexDouble(it.re + strength * (Math.random() - 0.5), it.im + strength * (Math.random() - 0.5)) }
+fun ComplexDoubleArray.addGaussianNoise(strength: Double, seed: Long? = null): ComplexDoubleArray {
+    val random = if (seed != null) Random(seed) else Random()
+    return this.mapComplex {
+        ComplexDouble(it.re + strength * (random.nextDouble() - 0.5), it.im + strength * (random.nextDouble() - 0.5))
+    }
+}

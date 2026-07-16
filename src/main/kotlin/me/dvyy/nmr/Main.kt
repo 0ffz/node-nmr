@@ -3,11 +3,12 @@ package me.dvyy.nmr
 import androidx.compose.runtime.snapshots.Snapshot
 import imgui.ImFontConfig
 import imgui.ImGui
-import imgui.ImGuiStyle
 import imgui.ImVec2
+import imgui.ImVec4
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.extension.implot.ImPlot
+import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiDir
 import imgui.flag.ImGuiStyleVar
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.helpers.loadFromResources
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.synthetic.Resonance
 import me.dvyy.nmr.ui.SpectrumViewModel
@@ -84,10 +86,15 @@ class Main : Application() {
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)      // Enable Docking
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
         init()
-        ImGui.styleColorsDark(ImGuiStyle().apply {
-            framePadding = ImVec2()
-        })
-
+        ImGui.pushStyleColor(ImGuiCol.Header, ImVec4(0.5f, 0.5f, 0.5f, 0.25f))
+        val rounding = 4f
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.FrameRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.PopupRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.ScrollbarRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.GrabRounding, rounding)
+        ImGui.pushStyleVar(ImGuiStyleVar.TabRounding, rounding)
     }
 
     fun init() {
@@ -126,16 +133,16 @@ class Main : Application() {
 
 
     fun setupDocking(dockspaceId: Int) {
-        val right = ImInt()
-        val left = ImInt()
-        val leftTop = ImInt()
-        val leftBottom = ImInt()
-        ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Left, 0.5f, left, right)
-        ImGuiInternal.dockBuilderSplitNode(left.get(), ImGuiDir.Down, 0.2f, leftBottom, leftTop)
-        ImGuiInternal.dockBuilderDockWindow("Graphs", right.get())
-        ImGuiInternal.dockBuilderDockWindow("Nodes", leftTop.get())
-        ImGuiInternal.dockBuilderDockWindow("Singular Values", leftTop.get())
-        ImGuiInternal.dockBuilderDockWindow("Spectra", leftBottom.get())
+        val bottom = ImInt()
+        val top = ImInt()
+        val bottomRight = ImInt()
+        val bottomLeft = ImInt()
+        ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Down, 0.5f, bottom, top)
+        ImGuiInternal.dockBuilderSplitNode(bottom.get(), ImGuiDir.Left, 0.2f, bottomLeft, bottomRight)
+        ImGuiInternal.dockBuilderDockWindow("Graphs", top.get())
+        ImGuiInternal.dockBuilderDockWindow("Nodes", bottomRight.get())
+        ImGuiInternal.dockBuilderDockWindow("Singular Values", bottomLeft.get())
+        ImGuiInternal.dockBuilderDockWindow("Spectra", bottomLeft.get())
         ImGuiInternal.dockBuilderFinish(dockspaceId)
 
     }
@@ -166,11 +173,11 @@ class Main : Application() {
             }
         }
 
-        window("Singular Values") {
-            SingularValuesGraph(state)
-        }
         window("Spectra") {
             SpectraScreen(state)
+        }
+        window("Singular Values") {
+            SingularValuesGraph(state)
         }
         window("Nodes") {
             NodeScreen(nodeGraph)

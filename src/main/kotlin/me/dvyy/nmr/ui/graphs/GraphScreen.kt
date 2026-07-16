@@ -1,12 +1,14 @@
 package me.dvyy.nmr.ui.graphs
 
-import imgui.ImGui
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotAxis
 import imgui.extension.implot.flag.ImPlotAxisFlags
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.bindings.imgui.implotSpec
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.ui.nodes.Node
+import me.dvyy.nmr.ui.nodes.transformations.GraphNode
+import me.dvyy.nmr.ui.nodes.transformations.toImVec4
 
 fun ImGuiKt.GraphScreen(
     type: GraphType,
@@ -14,31 +16,35 @@ fun ImGuiKt.GraphScreen(
     nodes: List<Node>,
     graphs: List<SpectrumUiState>,
 ) {
-    if (ImGui.beginCombo("Spectrum", type.name)) {
-        GraphType.entries.forEachIndexed { index, type ->
-            if (ImGui.selectable(type.name, index == type.ordinal)) {
-                onGraphChange(type)
-            }
-        }
-        ImGui.endCombo()
-    }
-    subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.SHARE_ITEMS) {
+//    if (ImGui.beginCombo("Spectrum", type.name)) {
+//        GraphType.entries.forEachIndexed { index, type ->
+//            if (ImGui.selectable(type.name, index == type.ordinal)) {
+//                onGraphChange(type)
+//            }
+//        }
+//        ImGui.endCombo()
+//    }
+    subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
         plot("Spectra") {
             nodes.forEach { node ->
-                val signal = node.signalStep.output.value ?: return@forEach
-                if(signal != Signal.Empty) {
-//                val spec = implotSpec {
-//                    if (spectrum.color != null) lineColor = spectrum.color
-//                }
-                    line(node.name, signal.graphFid/*, spec = spec*/)
+                val step = node.signalStep
+                if (step !is GraphNode) return@forEach
+                val signal = step.inputRef.value ?: return@forEach
+                if (signal != Signal.Empty) {
+                val spec = implotSpec {
+                    if (step.color != null) lineColor = step.color?.toImVec4()
+                }
+                    line(step.title, signal.graphFid, spec = spec)
                 }
             }
         }
         plot("FFT") {
             ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
-            nodes.forEach {
-                val signal = it.signalStep.output.value ?: return@forEach
-                if(signal != Signal.Empty) {
+            nodes.forEach { node ->
+                val step = node.signalStep
+                if (step !is GraphNode) return@forEach
+                val signal = node.signalStep.inputRef.value ?: return@forEach
+                if (signal != Signal.Empty) {
 //                val spec = implotSpec {
 //                    if (spectrum.color != null) lineColor = spectrum.color
 //                }
@@ -59,7 +65,10 @@ fun ImGuiKt.GraphScreen(
 //                    else -> 1.0
 //                }
 
-                    line(it.name, signal.graphFft, xStart = signal.offset)//, xStart = offset, xScale = scale, spec = spec)
+                    val spec = implotSpec {
+                        if (step.color != null) lineColor = step.color?.toImVec4()
+                    }
+                    line(step.title, signal.graphFft, xStart = signal.offset, spec = spec)
                 }
             }
         }
