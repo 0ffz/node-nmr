@@ -4,6 +4,7 @@ plugins {
     alias(miaLibs.plugins.compose.compiler)
     alias(miaLibs.plugins.jetbrainsCompose)
     alias(miaLibs.plugins.shadowjar)
+    alias(miaLibs.plugins.mia.testing)
 }
 
 repositories {

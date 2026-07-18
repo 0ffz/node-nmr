@@ -8,7 +8,6 @@ import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
 class WaveletTransformation : SignalTransformation() {

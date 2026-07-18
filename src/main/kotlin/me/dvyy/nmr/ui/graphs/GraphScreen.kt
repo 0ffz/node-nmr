@@ -7,15 +7,13 @@ import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.implotSpec
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.ui.nodes.Node
-import me.dvyy.nmr.ui.nodes.transformations.GraphNode
+import me.dvyy.nmr.ui.nodes.transformations.GraphEmittingNode
 import me.dvyy.nmr.ui.nodes.transformations.toImVec4
 
 fun ImGuiKt.GraphScreen(
-    type: GraphType,
-    onGraphChange: (GraphType) -> Unit,
     nodes: List<Node>,
-    graphs: List<SpectrumUiState>,
 ) {
+    //TODO allow toggling certain graphs on or off
 //    if (ImGui.beginCombo("Spectrum", type.name)) {
 //        GraphType.entries.forEachIndexed { index, type ->
 //            if (ImGui.selectable(type.name, index == type.ordinal)) {
@@ -24,17 +22,18 @@ fun ImGuiKt.GraphScreen(
 //        }
 //        ImGui.endCombo()
 //    }
-    subplots("##ItemSharing", rows = 2, cols = 1, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
+    subplots("##plots", rows = 2, cols = 1, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
         plot("Spectra") {
             nodes.forEach { node ->
                 val step = node.signalStep
-                if (step !is GraphNode) return@forEach
-                val signal = step.inputRef.value ?: return@forEach
+                if (step !is GraphEmittingNode) return@forEach
+                val graph = step.graph
+                val signal = graph?.signal ?: return@forEach
                 if (signal != Signal.Empty) {
                 val spec = implotSpec {
-                    if (step.color != null) lineColor = step.color?.toImVec4()
+                    if (graph.color != null) lineColor = graph.color.toImVec4()
                 }
-                    line(step.title, signal.graphFid, spec = spec)
+                    line(graph.title, signal.graphFid, spec = spec)
                 }
             }
         }
@@ -42,33 +41,14 @@ fun ImGuiKt.GraphScreen(
             ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
             nodes.forEach { node ->
                 val step = node.signalStep
-                if (step !is GraphNode) return@forEach
-                val signal = node.signalStep.inputRef.value ?: return@forEach
+                if (step !is GraphEmittingNode) return@forEach
+                val graph = step.graph
+                val signal = graph?.signal ?: return@forEach
                 if (signal != Signal.Empty) {
-//                val spec = implotSpec {
-//                    if (spectrum.color != null) lineColor = spectrum.color
-//                }
-
-//            }
-//            graphs.forEach { spectrum ->
-//                val draw = when (type) {
-//                    GraphType.FFT -> spectrum.fft
-//                    GraphType.WAVELET -> spectrum.waveletRe
-//                    GraphType.FID -> spectrum.spectrum
-//                }
-//                val offset = when (type) {
-//                    GraphType.FFT -> spectrum.offset
-//                    else -> 0.0
-//                }
-//                val scale = when (type) {
-//                    GraphType.FFT -> spectrum.scale
-//                    else -> 1.0
-//                }
-
                     val spec = implotSpec {
-                        if (step.color != null) lineColor = step.color?.toImVec4()
+                        if (graph.color != null) lineColor = graph.color.toImVec4()
                     }
-                    line(step.title, signal.graphFft, xStart = signal.offset, spec = spec)
+                    line(graph.title, signal.graphFft, xStart = signal.offset, spec = spec)
                 }
             }
         }

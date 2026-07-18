@@ -12,7 +12,6 @@ import me.dvyy.nmr.complex.toComplexArray
 import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.signal.SignalUiState
-import me.dvyy.nmr.ui.nodes.NodeAttribute
 import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
 import org.jetbrains.bio.viktor.asF64Array
 import java.io.File
@@ -68,9 +67,6 @@ class BrukerDataset(private val directoryPath: String) : SignalProviding {
     override val name: String = dir.name
 
     private val procFile = dir.toPath() / "pdata" / "1" / "procs"
-    override val parameters: List<NodeAttribute> = listOf(
-//        Parameter("Color", color)
-    )
 
     init {
         require(dir.exists() && dir.isDirectory) { "Invalid Bruker directory: $directoryPath" }

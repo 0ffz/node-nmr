@@ -85,7 +85,6 @@ class Main : Application() {
         io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)  // Enable Keyboard Controls
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)      // Enable Docking
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
-        init()
         ImGui.pushStyleColor(ImGuiCol.Header, ImVec4(0.5f, 0.5f, 0.5f, 0.25f))
         val rounding = 4f
         ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, rounding)
@@ -98,37 +97,10 @@ class Main : Application() {
     }
 
     fun init() {
-        val brukerData = BrukerDataset("data/13C_lowsignal/27")
-        val cleanData = BrukerDataset("data/13C_lowsignal/28")
-        println("Pulse Program: ${brukerData.acqus["PULPROG"]}")
-        println("Spectrometer Frequency: ${brukerData.acqus["SFO1"]} MHz")
-
-        val sampleRate = 10000.0 // 10 kHz
-        val dwellTime = 1.0 / sampleRate
         val peaks = listOf(
 //            Resonance(amplitude = 10.0, frequencyHz = 150.0, phaseRadians = 0.0, t2StarSeconds = 0.05),
             Resonance(amplitude = 5.0, frequencyHz = -50.0, phaseRadians = 0.0, t2StarSeconds = 0.1)
         )
-//        state.loadSpectrum(
-//            "Synthetic",
-//            generateNmrSignal(
-//                16384,
-//                dwellTime,
-//                peaks
-//            ).addGaussianNoise(1.0),
-//            0.0, 0.0, 0.0,1.0
-//        )
-//        state.loadSpectrum(
-//            "Synthetic",
-//            generateNmrSignal(
-//                16384,
-//                dwellTime,
-//                peaks
-//            ),
-//            0.0, 0.0, 0.0,1.0
-//        )
-//        state.loadSpectrum("Dirty", brukerData, color = Colors.backgroundGray)
-//        state.loadSpectrum("Clean", cleanData)
     }
 
 
@@ -165,10 +137,7 @@ class Main : Application() {
         withStyle(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f) {
             window("Graphs") {
                 GraphScreen(
-                    state.graphType,
-                    onGraphChange = { state.graphType = it },
                     nodeGraph.nodes,
-                    state.visibleSpectra,
                 )
             }
         }

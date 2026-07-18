@@ -17,10 +17,11 @@ data class SignalUiState(
     val phaseParams: PhaseParams = PhaseParams(0.0, 0.0),
 ) {
     val graphFid: DoubleArray by lazy {
+        if(signal.fid.size == 0) return@lazy doubleArrayOf()
         signal.fid.real().also { it.asF64Array().let { it /= it.max() } }
     }
     val graphFft: DoubleArray by lazy {
-//        val (p0, p1) = signal.fft.findOptimalPhaseParameters()
+        if(signal.fft.size == 0) return@lazy doubleArrayOf()
         val (p0, p1) = phaseParams
         signal.fft.phaseCorrect(p0, p1).real()
     }

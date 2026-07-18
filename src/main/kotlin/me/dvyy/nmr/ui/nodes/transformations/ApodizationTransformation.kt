@@ -7,7 +7,9 @@ import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.propack.Propack
+import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.phasecorrect.PhaseParams
 import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
 import me.dvyy.nmr.phasecorrect.phaseCorrect
 import me.dvyy.nmr.signal.Signal
@@ -20,16 +22,22 @@ import me.dvyy.nmr.svd.reconstructDiagonals
 import me.dvyy.nmr.synthetic.Resonance
 import me.dvyy.nmr.synthetic.addGaussianNoise
 import me.dvyy.nmr.synthetic.generateNmrSignal
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.random.Random
 
-class ApodizationTransformation : SignalTransformation() {
+class ApodizationTransformation : SignalTransformation(), GraphEmittingNode {
     override val name: String = "Apodization"
     var lb by mutableStateOf(0.0001)
     var gauss by mutableStateOf(0.0)
+    var beta by mutableStateOf(15.0)
+    var lPrime by mutableStateOf(4000)
 
     override fun ImGuiKt.drawParams() {
         dragDouble("lb", lb, onChange = { lb = it })
         dragDouble("gauss", gauss, onChange = { gauss = it })
+        dragDouble("beta", beta, onChange = { beta = it })
+        sliderInt("l'", lPrime, min = 0, max =size, onChange = { lPrime = it })
     }
 
     private val size by derivedStateOf { input?.fid?.size ?: 0 }
@@ -42,12 +50,28 @@ class ApodizationTransformation : SignalTransformation() {
         val input = inputFid
         val lb = lb
         val gauss = gauss
+        val beta = beta
+        val lPrime = lPrime
         return compute {
             val cache = ComplexDoubleArray(size)
             input?.copyInto(cache.data)
-            cache.expApodized(lb).gaussApodized(gauss)
+            cache.expApodized(lb).gaussApodized(gauss).applyMsgApodization(
+                doubleArrayOf(
+                    0.03497, 0.01399, -0.00233, -0.01399, -0.02098, -0.02331, -0.02098, -0.01399, -0.00233, 0.01399, 0.03497
+                ), beta = beta, lPrime = lPrime
+            )
             Signal.Fid(cache)
         }
+    }
+
+    override val graph: GraphUiState by derivedStateOf {
+        val signal = ComplexDoubleArray(size) { ComplexDouble(1.0, 0.0) }
+        signal.expApodized(lb).gaussApodized(gauss).applyMsgApodization(
+            doubleArrayOf(
+                0.03497, 0.01399, -0.00233, -0.01399, -0.02098, -0.02331, -0.02098, -0.01399, -0.00233, 0.01399, 0.03497
+            ), beta = beta, lPrime = lPrime
+        )
+        GraphUiState("Apodization", SignalUiState(Signal.Fid(signal)))
     }
 }
 
@@ -68,6 +92,58 @@ class ZeroFillTransformation : SignalTransformation() {
     }
 }
 
+/**
+ * Applies the modified Savitzky-Golay (mSG) apodization function to an FID.
+ *
+ * @param this@applyMsgApodization The time-domain FID signal to be modified in-place.
+ * @param sgCoefficients The pre-calculated SG polynomial coefficients for the 2nd derivative.
+ * @param beta The scaling factor to balance line narrowing vs. negative side-lobes.
+ * @param lPrime The cutoff index (L'), typically 8 to 10 times the T2* relaxation time.
+ */
+fun ComplexDoubleArray.applyMsgApodization(
+    sgCoefficients: DoubleArray,
+    beta: Double,
+    lPrime: Int,
+) {
+    val totalPoints = size
+    val numCoeffs = sgCoefficients.size
+    val m = (numCoeffs - 1) / 2 // Assuming an odd number of SG coefficients (e.g., 11)
+
+    // The center coefficient corresponds to a_0 in the SG polynomial
+//    val a0 = sgCoefficients[m]
+
+    for (k in 0 until totalPoints) {
+        val weight: Double
+
+        if (k < lPrime) {
+            // Calculate the time-domain representation of the SG derivative filter
+            var hk = 0.0
+
+            // Sum the symmetrical components of the SG filter
+            for (index in sgCoefficients.indices) {
+                val n = index - m
+                val an = sgCoefficients[index]
+                // The angular frequency term depends on the specific FT scale used,
+                // commonly mapped as (2 * PI * n * k) / N
+                hk += an * cos(PI * n * k / lPrime)
+            }
+
+            // The mSG formula: Subtract the scaled derivative component from the original spectrum (1.0)
+            // Because the sum of 2nd derivative SG coefficients is 0, hk will be 0 at k=0,
+            // ensuring weight is exactly 1.0 at the first point (qNMR compliance).
+            weight = 1.0 - (beta * hk)
+
+        } else {
+            // Zero out the function beyond the cutoff L' to prevent noise amplification
+            weight = 0.0
+        }
+
+        // Apply the computed weight to both the real and imaginary parts of the FID
+        setRe(k, getRe(k) * weight)
+        setIm(k, getIm(k) * weight)
+    }
+}
+
 class PhaseCorrectTransformation : SignalTransformation() {
     override val name: String = "Phase"
     private val size by derivedStateOf { input?.fid?.size ?: 0 }
@@ -80,18 +156,29 @@ class PhaseCorrectTransformation : SignalTransformation() {
 //        NodeAttribute("p1", p1)
 //    )
 
-    override fun transform(): Deferred<Signal>? {
-        if (size == 0) return null
-//        this.p0.value = p0
-//        this.p1.value = p1
-        val fft = input?.fft?.data ?: return null
-        return compute {
-            val cache = ComplexDoubleArray(size)
-            fft?.copyInto(cache.data)
-            val (p0, p1) = cache.findOptimalPhaseParameters()
-            Signal.Fft(cache.phaseCorrect(p0, p1))
-        }
+    override fun transformUiState(state: SignalUiState?): SignalUiState? {
+        val cache = ComplexDoubleArray(size)
+        input?.fft?.data?.copyInto(cache.data)
+        val (p0, p1) = cache.findOptimalPhaseParameters()
+        return state?.copy(phaseParams = PhaseParams(p0, p1))
     }
+
+    override fun transform(): Deferred<Signal>? {
+        val input = input
+        return compute { input ?: Signal.Empty }
+    }
+//    override fun transform(): Deferred<Signal>? {
+//        if (size == 0) return null
+////        this.p0.value = p0
+////        this.p1.value = p1
+//        val fft = input?.fft?.data ?: return null
+//        return compute {
+//            val cache = ComplexDoubleArray(size)
+//            fft?.copyInto(cache.data)
+//            val (p0, p1) = cache.findOptimalPhaseParameters()
+//            Signal.Fft(cache.phaseCorrect(p0, p1))
+//        }
+//    }
 }
 
 
@@ -145,6 +232,7 @@ class SyntheticDataset : SignalProviding {
         dragDouble("phase", resonance.phaseRadians, onChange = { onChange(resonance.copy(phaseRadians = it)) })
         dragDouble("t2*", resonance.t2StarSeconds, scaleNearZero = false, onChange = { onChange(resonance.copy(t2StarSeconds = it)) })
     }
+
     override fun ImGuiKt.drawParams() {
         peaks.forEachIndexed { index, resonance ->
             treeNode("Peak $index", flags = ImGuiTreeNodeFlags.SpanTextWidth, header = {

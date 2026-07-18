@@ -1,7 +1,6 @@
 package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.Snapshot
 import imgui.ImGui
 import imgui.ImVec4
 import imgui.flag.ImGuiColorEditFlags
@@ -16,7 +15,6 @@ import me.dvyy.nmr.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.signal.SignalUiState
-import me.dvyy.nmr.ui.nodes.NodeAttribute
 import java.awt.Color
 
 sealed interface SignalNode {
@@ -26,8 +24,6 @@ sealed interface SignalNode {
 
 interface SignalProviding : SignalNode {
     val output: State<SignalUiState?>
-    val parameters: List<NodeAttribute> get() = emptyList()
-
 
     /**
      * Pipes outputs from this transformation into input of [other].
@@ -53,7 +49,17 @@ abstract class SignalInput : SignalNode {
 
 fun Color.toImVec4() = ImVec4(red.toFloat(), green.toFloat(), blue.toFloat(), alpha.toFloat()).div(255f, 255f, 255f, 255f)
 
-class GraphNode : SignalInput() {
+data class GraphUiState(
+    val title: String = "Untitled",
+    val signal: SignalUiState,
+    val color: Color? = null,
+)
+
+interface GraphEmittingNode {
+    val graph: GraphUiState?
+}
+
+class GraphNode : SignalInput(), GraphEmittingNode {
     override val name: String = "Graph"
     var title by mutableStateOf("Untitled")
     var color by mutableStateOf<Color?>(null)
@@ -66,9 +72,14 @@ class GraphNode : SignalInput() {
         }
         colorEdit4("Color", color ?: Color.BLACK, onChange = { color = it }, flags = ImGuiColorEditFlags.NoInputs)
         val bool = ImBoolean(autoPhase)
-        if(ImGui.checkbox("Auto Phase", bool)) {
+        if (ImGui.checkbox("Auto Phase", bool)) {
             autoPhase = bool.get()
         }
+    }
+
+    override val graph: GraphUiState? by derivedStateOf {
+        val input = inputRef.value ?: return@derivedStateOf null
+        GraphUiState(title, input, color)
     }
 }
 
@@ -89,6 +100,10 @@ abstract class SignalTransformation : SignalInput(), SignalProviding {
 
     abstract fun transform(): Deferred<Signal>?
 
+    open fun transformUiState(state: SignalUiState?): SignalUiState? {
+        return state
+    }
+
     init {
         snapshotFlow {
             transform()
@@ -96,7 +111,7 @@ abstract class SignalTransformation : SignalInput(), SignalProviding {
             it.start()
             it.await()
         }.onEach {
-            output.value = inputRef.value?.copy(signal = it)
+            output.value = transformUiState(inputRef.value?.copy(signal = it))
         }
             .launchIn(scope)
     }
