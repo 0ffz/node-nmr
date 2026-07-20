@@ -7,81 +7,81 @@ import imgui.extension.imnodes.ImNodes
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.ui.nodes.transformations.*
-
-data class NodeLink(
-    val id: Int,
-    val from: Int,
-    val to: Int,
-)
+import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
+import me.dvyy.nmr.ui.nodes.outputs.GraphNode
 
 class NodeGraphViewModel(
     val dataset: BrukerDataset,
 ) {
+
+    companion object {
+        var id = 1
+        fun nextId(): Int = id++
+
+    }
     init {
         ImNodes.createContext()
     }
 
     val editorContext = ImNodes.editorContextCreate()
 
-    var id = 1
     var nodes by mutableStateOf<PersistentList<Node>>(persistentListOf())
     private val _links = mutableSetOf<NodeLink>()
     private val linkIds = mutableListOf<Int>()
     val links: Set<NodeLink> = _links
 
     init {
-        val dataset = loadDataset(dataset, "Example dataset")
-        val apod = addTransform(ApodizationTransformation())
-        addTransform(WaveletTransformation())
-        val graph = addTransform(GraphNode())
-        link(dataset, apod)
-        link(apod, graph)
+
+        val dataset = addNode(DatasetNode(dataset))
+//        val apod = addNode(ApodizationTransformation())
+//        addNode(WaveletTransformation())
+        val graph = addNode(GraphNode())
+//        link(dataset.output, apod.inputRef)
+        link(dataset.output, graph.input)
     }
 
     /**
-     * Links the output of an [input] node to the input of an [output] node
+     * Links the output of an [from] node to the input of an [into] node
      */
-    fun link(input: Node, output: Node) {
-        val outId = input.outputId ?: return
-        val inId = output.inputId ?: return
-        _links.removeIf { it.to == output.inputId }
-        _links.add(NodeLink(id++, outId, inId))
-        (input.signalStep as SignalProviding).pipeInto(output.signalStep as SignalInput)
+    fun link(from: OutputAttribute<*>, into: InputAttribute<*>) {
+        if(from.pipeInto(into)) {
+            _links.removeIf { it.into.id == into.id }
+            _links.add(NodeLink(id++, from, into))
+        }
     }
 
     fun unlink(linkId: Int) {
         val link = _links.find { it.id == linkId } ?: return
         _links.remove(link)
-        (nodeForAttribute(link.to)?.signalStep as? SignalInput)?.removePipe()
-    }
-
-    fun nodeForAttribute(id: Int): Node? {
-        return nodes.find { it.outputId == id || it.inputId == id }
+        link.into.removePipe()
     }
 
     fun removeNode(id: Int) {
         val index = nodes.indexOfFirst { it.id == id }.takeIf { it != -1 } ?: return
         val node = nodes[index]
         nodes = nodes.removeAt(index)
-        _links.removeIf { it.from == node.outputId || it.to == node.inputId }
+        node.attributes.forEach { attr ->
+            val id = attr.id
+            _links.removeIf { it.from.id == id || it.into.id == id }
+
+        }
     }
 
-    fun loadDataset(dataset: BrukerDataset, name: String): Node {
-        val node = Node(id++, name, dataset, outputId = id++, inputId = null)
-        nodes = nodes.add(node)
-        return node
+    fun findAttribute(id: Int): Attribute<*>? {
+        nodes.forEach {
+            it.attributes.forEach { attr -> if(attr.id == id) return attr }
+        }
+        return null
     }
+//    fun loadDataset(dataset: SignalProviding, name: String): Node {
+//        val node = Node(id++, name, dataset, outputId = id++, inputId = null)
+//        nodes = nodes.add(node)
+//        return node
+//    }
 
-    fun addTransform(transform: SignalNode): Node {
-        val node = Node(
-            id++,
-            transform.name,
-            transform,
-            inputId = if (transform is SignalInput) id++ else null,
-            outputId = if (transform is SignalProviding) id++ else null
-        )
+    fun <T: Node> addNode(node: T): T {
         nodes = nodes.add(node)
         return node
     }
 }
+

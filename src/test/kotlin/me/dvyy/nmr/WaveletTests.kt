@@ -1,9 +1,13 @@
 package me.dvyy.nmr
 
+import io.kotest.matchers.equality.shouldBeEqualUsingFields
 import me.dvyy.nmr.bindings.wavelib.StationaryWaveletTransform
+import me.dvyy.nmr.synthetic.generateNmrSignal
+import me.dvyy.nmr.wavelet.MultiScanWaveletDenoise
 import me.dvyy.nmr.wavelet.WaveletHelpers.softThreshold
 import org.junit.jupiter.api.Test
 import kotlin.math.abs
+import kotlin.random.Random
 import kotlin.use
 
 class WaveletTests {
@@ -69,5 +73,28 @@ class WaveletTests {
 
             println("Denoising complete. Clean signal extracted.")
         }
+    }
+
+    @Test
+    fun `swt and iswt`() {
+        val arr = DoubleArray(2048) { it.toDouble() }
+        val wavelet = MultiScanWaveletDenoise.swt(arr, 4)
+        val result = MultiScanWaveletDenoise.iswt(wavelet, level = 4)
+        println(result.toList())
+    }
+
+    @Test
+    fun `multi scan`() {
+        val arrays = listOf(
+            DoubleArray(2048) { it.toDouble() + 5 * (Random.nextDouble() - 0.5) },
+            DoubleArray(2048) { it.toDouble() + 5 * (Random.nextDouble() - 0.5) },
+            DoubleArray(2048) { it.toDouble() + 5 * (Random.nextDouble() - 0.5) },
+            DoubleArray(2048) { it.toDouble() + 5 * (Random.nextDouble() - 0.5) },
+        )
+        val average = DoubleArray(2048) { index ->
+            arrays.sumOf { it[index] } / arrays.size
+        }
+        println(MultiScanWaveletDenoise.denoise(arrays).toList())
+        println(average.toList())
     }
 }

@@ -1,23 +1,18 @@
 package me.dvyy.nmr.ui.nodes
 
-import androidx.compose.runtime.MutableState
 import imgui.ImColor
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesCol
-import imgui.extension.imnodes.flag.ImNodesPinShape
 import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiColorEditFlags
 import imgui.flag.ImGuiStyleVar
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.nodes.transformations.ComputeState
-import me.dvyy.nmr.ui.nodes.transformations.SignalInput
-import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SignalTransformationNode
 import me.dvyy.nmr.ui.spectra.Icons
-import java.awt.Color
 
 fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
-    val isComputing = (node.signalStep as? SignalTransformation)?.state == ComputeState.COMPUTING
+    val isComputing = (node as? SignalTransformationNode)?.state == ComputeState.COMPUTING
     if(isComputing) {
         ImNodes.pushColorStyle(ImNodesCol.TitleBar, ImColor.rgb("#525252"))
         ImNodes.pushColorStyle(ImNodesCol.TitleBarSelected, ImColor.rgb("#525252"))
@@ -34,20 +29,9 @@ fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
             }
             ImGui.popStyleColor(2)
         }
-        if (node.inputId != null) {
-            inputAttribute(node.inputId, ImNodesPinShape.CircleFilled) {
-                text("In")
-            }
-            if(node.outputId != null) ImGui.sameLine()
-        }
-        if (node.outputId != null) {
-            outputAttribute(node.outputId) {
-                text("Out");
-            }
-        }
 
         withItemWidth(100f) {
-            with(node.signalStep) { drawParams() }
+            with(node) { draw() }
         }
 
 //    section("Plot", defaultOpen = false, flags = ImGuiTreeNodeFlags.SpanLabelWidth) {

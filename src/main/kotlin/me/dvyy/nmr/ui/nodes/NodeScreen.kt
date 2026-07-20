@@ -3,12 +3,9 @@ package me.dvyy.nmr.ui.nodes
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesMiniMapLocation
-import imgui.flag.*
+import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.ui.nodes.transformations.SignalNode
-import me.dvyy.nmr.ui.nodes.transformations.SignalProviding
-import me.dvyy.nmr.ui.nodes.transformations.SignalTransformation
 
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)
@@ -19,8 +16,8 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     }
 
     graph.links.forEach { link ->
-        val (id, inId, outId) = link
-        ImNodes.link(id, inId, outId)
+        val (id, from, into) = link
+        ImNodes.link(id, from.id, into.id)
     }
 //    button("Save") {
 //        ImNodes.saveCurrentEditorStateToIniFile("test.ini")
@@ -31,12 +28,16 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     val start = ImInt(0)
     val end = ImInt(0)
     if (ImNodes.isLinkCreated(start, end)) {
-        val from = graph.nodeForAttribute(start.get()) ?: return
-        val to = graph.nodeForAttribute(end.get()) ?: return
-        graph.link(from, to)
+        val from = graph.findAttribute(start.get()) ?: return
+        val to = graph.findAttribute(end.get()) ?: return
+        graph.link(from as OutputAttribute<*>, to as InputAttribute<*>)
     }
     if (ImNodes.isLinkDestroyed(start)) {
         graph.unlink(start.get())
+    }
+    val startAttr = ImInt()
+    if(ImNodes.isLinkStarted(startAttr)) {
+        println("Starting drag from ${startAttr.get()}")
     }
 
     if (ImGui.isMouseClicked(ImGuiMouseButton.Right)) {
@@ -47,11 +48,11 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
 
     // Drag and drop to create new nodes
     if (ImGui.beginDragDropTarget()) {
-        val payloadData = ImGui.acceptDragDropPayload<SignalNode>("node")
+        val payloadData = ImGui.acceptDragDropPayload<() -> Node>("node")
         if (payloadData != null) {
             val mouseX = ImGui.getMousePosX()
             val mouseY = ImGui.getMousePosY()
-            val node = graph.addTransform(payloadData)
+            val node = graph.addNode(payloadData())
             ImNodes.setNodeScreenSpacePos(node.id, mouseX, mouseY)
         }
         ImGui.endDragDropTarget()

@@ -5,29 +5,12 @@ import me.dvyy.nmr.bindings.fftw.FftwDirection
 import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
+import me.dvyy.nmr.bindings.wavelib.StationaryWaveletTransform
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.complex.complexDoubleArrayOf
-import me.dvyy.nmr.phasecorrect.PhaseParams
-import me.dvyy.nmr.phasecorrect.phaseCorrect
 import org.jetbrains.bio.viktor.asF64Array
+import kotlin.use
 
-data class SignalUiState(
-    val signal: Signal,
-    val offset: Double = 0.0,
-    val phaseParams: PhaseParams = PhaseParams(0.0, 0.0),
-) {
-    val graphFid: DoubleArray by lazy {
-        if(signal.fid.size == 0) return@lazy doubleArrayOf()
-        signal.fid.real().also { it.asF64Array().let { it /= it.max() } }
-    }
-    val graphFft: DoubleArray by lazy {
-        if(signal.fft.size == 0) return@lazy doubleArrayOf()
-        val (p0, p1) = phaseParams
-        signal.fft.phaseCorrect(p0, p1).real()
-    }
-    val graphWavelet: DoubleArray by lazy { signal.wavelet.real() }
-
-}
 /**
  * A 1D signal backed by an underlying type (ex. original fid, fourier-transformed, etc...)
  *
@@ -37,7 +20,17 @@ data class SignalUiState(
 sealed class Signal {
     abstract val fid: ComplexDoubleArray
     abstract val fft: ComplexDoubleArray
-    abstract val wavelet: ComplexDoubleArray
+    val waveletLevels = 4
+    val wavelet: ComplexDoubleArray by lazy {
+        if (fft.size == 0) return@lazy fft
+        val waveletRe = StationaryWaveletTransform(waveletName = "db2", signalLength = fft.size, level = waveletLevels).use { swt ->
+            swt.forward(fft.real())
+        }
+        val waveletIm = StationaryWaveletTransform(waveletName = "db2", signalLength = fft.size, level = waveletLevels).use { swt ->
+            swt.forward(fft.im())
+        }
+        ComplexDoubleArray.from(waveletRe, waveletIm)
+    }
 
     class Fid(val data: ComplexDoubleArray) : Signal() {
         override val fid: ComplexDoubleArray = data
@@ -57,8 +50,6 @@ sealed class Signal {
                 fft.data.asF64Array().let { it /= it.max() }
             }
         }
-        override val wavelet: ComplexDoubleArray
-            get() = TODO("Not yet implemented")
     }
 
     class Fft(val data: ComplexDoubleArray) : Signal() {
@@ -76,13 +67,10 @@ sealed class Signal {
             }
         }
         override val fft: ComplexDoubleArray = data
-        override val wavelet: ComplexDoubleArray
-            get() = TODO("Not yet implemented")
     }
 
     data object Empty: Signal() {
         override val fid: ComplexDoubleArray = complexDoubleArrayOf()
         override val fft: ComplexDoubleArray = complexDoubleArrayOf()
-        override val wavelet: ComplexDoubleArray = complexDoubleArrayOf()
     }
 }

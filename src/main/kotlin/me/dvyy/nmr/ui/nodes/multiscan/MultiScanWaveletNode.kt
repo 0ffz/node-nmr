@@ -1,0 +1,25 @@
+package me.dvyy.nmr.ui.nodes.multiscan
+
+import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.signal.SignalSet
+import me.dvyy.nmr.signal.SignalUiState
+import me.dvyy.nmr.ui.nodes.Node
+import me.dvyy.nmr.wavelet.MultiScanWaveletDenoise
+
+class MultiScanWaveletNode(): Node() {
+    override val name: String = "Multi scan denoise"
+    val input = inputAttribute<SignalSet?>()
+    val output = outputAttribute<SignalUiState?> {
+        val inputs = input.value?.signals ?: return@outputAttribute null
+        val denoisedRe = MultiScanWaveletDenoise.denoise(inputs.map { it.fft.real() })
+        val denoisedIm = MultiScanWaveletDenoise.denoise(inputs.map { it.fft.im() })
+        val signal = Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
+        SignalUiState(signal)
+    }
+
+    override fun ImGuiKt.draw() {
+        inputOutput(input, output)
+    }
+}

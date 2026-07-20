@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
+import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
 import kotlin.system.exitProcess
 
 class MenuViewModel(
@@ -22,7 +23,7 @@ class MenuViewModel(
     fun openFilePicker() {
         scope.launch {
             val file = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
-            graph.loadDataset(BrukerDataset(file.file.absolutePath), file.name)
+            graph.addNode(DatasetNode(BrukerDataset(file.file.absolutePath)))
         }
     }
 }

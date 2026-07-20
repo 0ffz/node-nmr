@@ -10,12 +10,13 @@ import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
-class WaveletTransformation : SignalTransformation() {
+class WaveletTransformation : SignalTransformationNode() {
     override val name: String = "Wavelet denoise"
     var threshold by mutableStateOf(0.0001)
     var level by mutableStateOf(4)
 
-    override fun ImGuiKt.drawParams() {
+    override fun ImGuiKt.draw() {
+        drawInput()
         sliderInt("level", level, min = 1, max = 11, onChange = { level = it })
         dragDouble("threshold", threshold, onChange = {threshold = it})
     }

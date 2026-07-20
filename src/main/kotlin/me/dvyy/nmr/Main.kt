@@ -6,6 +6,7 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.ImVec4
 import imgui.app.Application
+import imgui.app.Backend
 import imgui.app.Configuration
 import imgui.extension.implot.ImPlot
 import imgui.flag.ImGuiCol
@@ -19,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.helpers.loadFromResources
 import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.synthetic.Resonance
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.menubar.AppMenuBar
@@ -27,7 +27,7 @@ import me.dvyy.nmr.ui.menubar.MenuViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
-import me.dvyy.nmr.ui.spectra.SpectraScreen
+import me.dvyy.nmr.ui.spectra.NodeListScreen
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -94,15 +94,11 @@ class Main : Application() {
         ImGui.pushStyleVar(ImGuiStyleVar.ScrollbarRounding, rounding)
         ImGui.pushStyleVar(ImGuiStyleVar.GrabRounding, rounding)
         ImGui.pushStyleVar(ImGuiStyleVar.TabRounding, rounding)
+        init()
     }
 
     fun init() {
-        val peaks = listOf(
-//            Resonance(amplitude = 10.0, frequencyHz = 150.0, phaseRadians = 0.0, t2StarSeconds = 0.05),
-            Resonance(amplitude = 5.0, frequencyHz = -50.0, phaseRadians = 0.0, t2StarSeconds = 0.1)
-        )
     }
-
 
     fun setupDocking(dockspaceId: Int) {
         val bottom = ImInt()
@@ -143,7 +139,7 @@ class Main : Application() {
         }
 
         window("Spectra") {
-            SpectraScreen(state)
+            NodeListScreen(state)
         }
         window("Singular Values") {
             SingularValuesGraph(state)

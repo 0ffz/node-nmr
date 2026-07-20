@@ -7,6 +7,7 @@ import imgui.extension.imnodes.ImNodes
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotFlags
 import imgui.flag.ImGuiTreeNodeFlags
+import imgui.type.ImBoolean
 import imgui.type.ImDouble
 import kotlin.math.abs
 
@@ -70,6 +71,11 @@ object ImGuiKt {
     inline fun sliderInt(label: String, value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
         val arr = intArrayOf(value)
         if (sliderInt(label, arr, min, max)) onChange(arr[0])
+    }
+
+    inline fun checkbox(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
+        val bool = ImBoolean(value)
+        if (checkbox(label, bool)) onChange(bool.get())
     }
 
     inline fun colorEdit4(
