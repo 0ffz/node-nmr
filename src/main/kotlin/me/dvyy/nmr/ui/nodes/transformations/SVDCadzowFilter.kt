@@ -11,7 +11,7 @@ import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.svd.HankelOperator
 import me.dvyy.nmr.svd.reconstructDiagonals
 
-class SVDTransformation : SignalTransformationNode() {
+class SVDCadzowFilter : SignalTransformationNode() {
     override val name: String = "SVD"
     var numValues by mutableStateOf(10)
 

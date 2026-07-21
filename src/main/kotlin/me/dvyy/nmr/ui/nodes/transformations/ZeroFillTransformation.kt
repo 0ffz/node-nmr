@@ -22,3 +22,10 @@ class ZeroFillTransformation : SignalTransformationNode() {
         }
     }
 }
+
+fun ComplexDoubleArray.zeroFill(): ComplexDoubleArray {
+    val target = MathHelpers.nextPowerOfTwo(size + 1000)
+    val cache = ComplexDoubleArray(target)
+    data.copyInto(cache.data)
+    return cache
+}

@@ -1,0 +1,51 @@
+package me.dvyy.nmr.ui.nodes.inputs
+
+import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.bindings.imgui.ImNodeContext
+import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.parsing.BrukerDataset
+import me.dvyy.nmr.parsing.removeDigitalFilter
+import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.signal.SignalSet
+import me.dvyy.nmr.ui.nodes.Node
+import org.jetbrains.bio.viktor.asF64Array
+
+class MultiDatasetNode(
+    val datasets: List<BrukerDataset>,
+) : Node() {
+    override val name: String = datasets.first().name
+
+    val output = outputAttribute<SignalSet> {
+        val data = datasets.map {
+            it.readFid().removeDigitalFilter(it.acqus).apply {
+                data.asF64Array().let { it /= it.max() }
+            }
+        }
+        SignalSet(data.map { Signal.Fid(it) })
+    }
+
+    override fun ImGuiKt.draw() {
+        with(ImNodeContext) {
+            outputAttribute(output.id) {
+                text("Out")
+            }
+        }
+    }
+}
+
+class Dataset2DNode(
+    val dataset: BrukerDataset
+) : Node() {
+    override val name: String = dataset.name
+    val output = outputAttribute<List<ComplexDoubleArray>> {
+        dataset.readSer().map { it.removeDigitalFilter(dataset.acqus) }
+    }
+
+    override fun ImGuiKt.draw() {
+        with(ImNodeContext) {
+            outputAttribute(output.id) {
+                text("Out")
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@ import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotFlags
+import imgui.flag.ImGuiColorEditFlags
 import imgui.flag.ImGuiTreeNodeFlags
 import imgui.type.ImBoolean
 import imgui.type.ImDouble

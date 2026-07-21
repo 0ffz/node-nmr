@@ -1,17 +1,13 @@
 package me.dvyy.nmr.ui.nodes
 
 import imgui.ImColor
-import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesCol
-import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiStyleVar
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.nodes.transformations.ComputeState
 import me.dvyy.nmr.ui.nodes.transformations.SignalTransformationNode
-import me.dvyy.nmr.ui.spectra.Icons
 
-fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
+fun ImGuiKt.NodeUi(node: Node) {
     val isComputing = (node as? SignalTransformationNode)?.state == ComputeState.COMPUTING
     if(isComputing) {
         ImNodes.pushColorStyle(ImNodesCol.TitleBar, ImColor.rgb("#525252"))
@@ -21,13 +17,6 @@ fun ImGuiKt.NodeUi(node: Node, onDelete: () -> Unit) {
     node(node.id) {
         nodeTitleBar {
             text(node.name)
-            ImGui.sameLine()
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.0f, 0.0f, 0.0f, 0.0f);
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1.0f, 1.0f, 1.0f, 0.1f);
-            withStyle(ImGuiStyleVar.FrameRounding, 5.0f) {
-                button(Icons.delete) { onDelete() }
-            }
-            ImGui.popStyleColor(2)
         }
 
         withItemWidth(100f) {

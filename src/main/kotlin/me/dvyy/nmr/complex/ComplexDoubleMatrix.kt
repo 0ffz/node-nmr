@@ -1,5 +1,7 @@
 package me.dvyy.nmr.complex
 
+import org.jetbrains.bio.viktor.F64Array
+
 class ComplexDoubleMatrix(
     val columns: Array<ComplexDoubleArray>
 ) {
@@ -10,7 +12,8 @@ class ComplexDoubleMatrix(
         }
     }
 
-    val rows = columns[0].size
+    val width = columns.size
+    val height = columns[0].size
 
     operator fun get(column: Int): ComplexDoubleArray = columns[column]
 

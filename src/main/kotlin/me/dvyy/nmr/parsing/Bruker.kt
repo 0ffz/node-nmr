@@ -89,6 +89,7 @@ class BrukerDataset(private val directoryPath: String) {
         )
     }
 
+    val is2D: Boolean get() = File(dir, "ser").exists()
     /**
      * Reads the 1D 'fid' file and returns a Multik 1D array of ComplexDouble.
      */

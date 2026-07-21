@@ -10,6 +10,7 @@ fun ImGuiKt.AppMenuBar(
 ) {
     menu("File") {
         if (menuItem("Open")) menu.openFilePicker()
+        if (menuItem("Open Multiple")) menu.openMultiFilePicker()
         if (menuItem("Exit")) menu.exit()
     }
     menu("View") {

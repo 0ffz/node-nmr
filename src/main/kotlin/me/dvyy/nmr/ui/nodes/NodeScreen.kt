@@ -9,10 +9,10 @@ import me.dvyy.nmr.bindings.imgui.ImGuiKt
 
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)
-    ImNodes.getIO().altMouseButton = ImGuiMouseButton.Right
+    ImNodes.getIO().altMouseButton = ImGuiMouseButton.Middle
     ImNodes.beginNodeEditor()
     for (node in graph.nodes) {
-        NodeUi(node, onDelete = { graph.removeNode(node.id) })
+        NodeUi(node)
     }
 
     graph.links.forEach { link ->
@@ -41,7 +41,10 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     }
 
     if (ImGui.isMouseClicked(ImGuiMouseButton.Right)) {
-//        ImGui.openPopup("editor_context_menu")
+        if(ImNodes.getHoveredNode() != -1) {
+            graph.selectedNode = ImNodes.getHoveredNode()
+            ImGui.openPopup("node_menu")
+        }
         val link = ImNodes.getHoveredLink()
         graph.unlink(link)
     }
@@ -56,6 +59,13 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
             ImNodes.setNodeScreenSpacePos(node.id, mouseX, mouseY)
         }
         ImGui.endDragDropTarget()
+    }
+    if (ImGui.beginPopup("node_menu")) {
+        if (ImGui.menuItem("Delete Node")) {
+            graph.removeNode(graph.selectedNode)
+        }
+
+        ImGui.endPopup()
     }
     if (ImGui.beginPopup("editor_context_menu")) {
         if (ImGui.menuItem("Add Node")) {

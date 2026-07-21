@@ -3,6 +3,7 @@ package me.dvyy.nmr.signal
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import kotlin.math.exp
+import kotlin.math.sin
 
 fun ComplexDoubleArray.expApodized(
     lb: Double,
@@ -23,6 +24,15 @@ fun ComplexDoubleArray.gaussApodized(
     forEachIndexed { index, complex ->
         val decay = exp(-0.01 * a * (index.toLong() * index.toLong()))
         this[index] = complex * decay
+    }
+    return this
+}
+
+fun ComplexDoubleArray.sineBellApodized(): ComplexDoubleArray {
+    val n = this.size
+    forEachIndexed { index, complex ->
+        val weight = sin(Math.PI * index / (n - 1))
+        this[index] = complex * weight
     }
     return this
 }

@@ -2,14 +2,16 @@ package me.dvyy.nmr.ui.menubar
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
-import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.dialogs.openFilePicker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
+import me.dvyy.nmr.ui.nodes.inputs.Dataset2DNode
 import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
+import me.dvyy.nmr.ui.nodes.inputs.MultiDatasetNode
 import kotlin.system.exitProcess
 
 class MenuViewModel(
@@ -23,7 +25,16 @@ class MenuViewModel(
     fun openFilePicker() {
         scope.launch {
             val file = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
-            graph.addNode(DatasetNode(BrukerDataset(file.file.absolutePath)))
+            val dataset = BrukerDataset(file.file.absolutePath)
+            graph.addNode(if(dataset.is2D) Dataset2DNode(dataset) else DatasetNode(dataset))
+        }
+    }
+
+    fun openMultiFilePicker() {
+        scope.launch {
+            val parentFolder = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
+            val files = parentFolder.file.listFiles()
+            graph.addNode(MultiDatasetNode(files.map { BrukerDataset(it.absolutePath) }))
         }
     }
 }

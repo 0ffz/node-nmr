@@ -11,6 +11,11 @@ import me.dvyy.nmr.ui.nodes.multiscan.MultiScanAverage
 import me.dvyy.nmr.ui.nodes.multiscan.MultiScanWaveletNode
 import me.dvyy.nmr.ui.nodes.multiscan.NoiseAddingNode
 import me.dvyy.nmr.ui.nodes.multiscan.SignalSelectNode
+import me.dvyy.nmr.ui.nodes.outputs.Graph2DNode
+import me.dvyy.nmr.ui.nodes.transformations.PhaseCorrectTransformation
+import me.dvyy.nmr.ui.nodes.transformations.SVDCadzowFilter
+import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
+import me.dvyy.nmr.ui.nodes.transformations.ZeroFillTransformation
 
 fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
     val spectra = state.spectra
@@ -24,14 +29,14 @@ fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
     }
     collapsingHeader("Outputs") {
         DragDropTransformationSource("Graph") { GraphNode() }
+        DragDropTransformationSource("Graph 2D") { Graph2DNode() }
     }
     collapsingHeader("Transformations") {
         DragDropTransformationSource("Apodization") { ApodizationNode() }
-//        DragDropTransformationSource("MultiScanWaveletDenoise") { MultiScanWaveletDenoise() }
-//        DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
-//        DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
-//        DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
-//        DragDropTransformationSource("SVDTransformation") { SVDTransformation() }
+        DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
+        DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
+        DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
+        DragDropTransformationSource("Cadzow filter") { SVDCadzowFilter() }
     }
 
     collapsingHeader("Multi signal") {
@@ -48,7 +53,6 @@ fun ImGuiKt.DragDropTransformationSource(
 ) {
     ImGui.button(name)
     if (ImGui.beginDragDropSource()) {
-        println("Began drag drop source!")
         ImGui.setDragDropPayload("node", create)
         ImGui.text(name)
         ImGui.endDragDropSource()

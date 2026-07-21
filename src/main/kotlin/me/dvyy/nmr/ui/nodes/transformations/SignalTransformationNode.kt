@@ -2,7 +2,6 @@ package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.*
 import imgui.ImGui
-import imgui.ImVec4
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -14,19 +13,12 @@ import me.dvyy.nmr.bindings.imgui.ImNodeContext
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
-import java.awt.Color
 
-
-enum class ComputeState {
-    COMPUTING, DONE
-}
-
-fun Color.toImVec4() = ImVec4(red.toFloat(), green.toFloat(), blue.toFloat(), alpha.toFloat()).div(255f, 255f, 255f, 255f)
 
 abstract class SignalTransformationNode : Node() {
     val scope = CoroutineScope(AppDispatchers.Frontend)
     var state by mutableStateOf(ComputeState.DONE)
-    val inputRef = inputAttribute<SignalUiState>()
+    val inputRef = inputAttribute<SignalUiState?>()
     val input get() = inputRef.value?.signal
     val outputState: MutableState<SignalUiState?> = mutableStateOf(null)
     val output = outputAttribute<SignalUiState?> { outputState.value }
@@ -65,11 +57,13 @@ abstract class SignalTransformationNode : Node() {
     init {
         snapshotFlow {
             transform()
-        }.filterNotNull().map {
+        }.map {
+            if(it == null) return@map null
             it.start()
             it.await()
         }.onEach {
-            outputState.value = transformUiState(inputRef.value?.copy(signal = it))
+            if(it == null) outputState.value = null
+            else outputState.value = transformUiState(inputRef.value?.copy(signal = it))
         }
             .launchIn(scope)
     }

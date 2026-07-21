@@ -19,6 +19,7 @@ class NodeGraphViewModel(
         fun nextId(): Int = id++
 
     }
+
     init {
         ImNodes.createContext()
     }
@@ -29,7 +30,7 @@ class NodeGraphViewModel(
     private val _links = mutableSetOf<NodeLink>()
     private val linkIds = mutableListOf<Int>()
     val links: Set<NodeLink> = _links
-
+    var selectedNode by mutableStateOf(-1)
     init {
 
         val dataset = addNode(DatasetNode(dataset))
@@ -44,7 +45,7 @@ class NodeGraphViewModel(
      * Links the output of an [from] node to the input of an [into] node
      */
     fun link(from: OutputAttribute<*>, into: InputAttribute<*>) {
-        if(from.pipeInto(into)) {
+        if (from.pipeInto(into)) {
             _links.removeIf { it.into.id == into.id }
             _links.add(NodeLink(id++, from, into))
         }
@@ -62,14 +63,18 @@ class NodeGraphViewModel(
         nodes = nodes.removeAt(index)
         node.attributes.forEach { attr ->
             val id = attr.id
-            _links.removeIf { it.from.id == id || it.into.id == id }
+            _links.toList().forEach {
+                if (it.from.id == id || it.into.id == id) {
+                    unlink(it.id)
+                }
+            }
 
         }
     }
 
     fun findAttribute(id: Int): Attribute<*>? {
         nodes.forEach {
-            it.attributes.forEach { attr -> if(attr.id == id) return attr }
+            it.attributes.forEach { attr -> if (attr.id == id) return attr }
         }
         return null
     }
@@ -79,7 +84,7 @@ class NodeGraphViewModel(
 //        return node
 //    }
 
-    fun <T: Node> addNode(node: T): T {
+    fun <T : Node> addNode(node: T): T {
         nodes = nodes.add(node)
         return node
     }
