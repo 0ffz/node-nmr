@@ -1,5 +1,6 @@
 package me.dvyy.nmr.bindings.propack
 
+import me.dvyy.nmr.bindings.helpers.OS
 import me.dvyy.nmr.bindings.helpers.Sizes
 import org.scijava.nativelib.NativeLoader
 import java.lang.foreign.*
@@ -10,9 +11,11 @@ import java.lang.invoke.MethodType
 
 object PropackBindings {
     init {
-        NativeLoader.loadLibrary("blas") //FIXME we currently don't include in project and error message is not clear when this fails
-        NativeLoader.loadLibrary("lapack")
-        NativeLoader.loadLibrary("propack_common")
+        if (OS.current == OS.LINUX) {
+            NativeLoader.loadLibrary("blas") //FIXME we currently don't include in project and error message is not clear when this fails
+            NativeLoader.loadLibrary("lapack")
+            NativeLoader.loadLibrary("propack_common")
+        }
         NativeLoader.loadLibrary("zpropack")
     }
 

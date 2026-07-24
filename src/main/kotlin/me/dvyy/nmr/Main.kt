@@ -17,6 +17,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import me.dvyy.nmr.bindings.propack.PropackBindings
+import me.dvyy.nmr.bindings.wavelib.WavelibBindings
 import me.dvyy.nmr.helpers.loadFromResources
 import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.ui.SpectrumViewModel
@@ -55,13 +57,10 @@ object AppDispatchers {
 
 @OptIn(ExperimentalAtomicApi::class)
 class Main : Application() {
-    val context = ImPlot.createContext()
     val scope = CoroutineScope(Dispatchers.IO)
     val state = SpectrumViewModel(scope)
-    val nodeGraph = NodeGraphViewModel(
-        dataset = BrukerDataset("data/13C_lowsignal/28")
-    )
-    val menuViewModel = MenuViewModel(scope, nodeGraph)
+    val nodeGraph by lazy { NodeGraphViewModel() }
+    val menuViewModel by lazy { MenuViewModel(scope, nodeGraph) }
     val uiScope = CoroutineScope(Dispatchers.Main)
 
     private val applyScheduled = AtomicBoolean(false)
@@ -94,6 +93,7 @@ class Main : Application() {
         ImGui.pushStyleVar(ImGuiStyleVar.ScrollbarRounding, rounding)
         ImGui.pushStyleVar(ImGuiStyleVar.GrabRounding, rounding)
         ImGui.pushStyleVar(ImGuiStyleVar.TabRounding, rounding)
+        ImPlot.createContext()
         init()
     }
 

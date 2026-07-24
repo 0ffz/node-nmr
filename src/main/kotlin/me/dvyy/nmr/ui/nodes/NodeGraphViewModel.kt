@@ -10,9 +10,7 @@ import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
 import me.dvyy.nmr.ui.nodes.outputs.GraphNode
 
-class NodeGraphViewModel(
-    val dataset: BrukerDataset,
-) {
+class NodeGraphViewModel() {
 
     companion object {
         var id = 1
@@ -33,12 +31,12 @@ class NodeGraphViewModel(
     var selectedNode by mutableStateOf(-1)
     init {
 
-        val dataset = addNode(DatasetNode(dataset))
+//        val dataset = addNode(DatasetNode(dataset))
 //        val apod = addNode(ApodizationTransformation())
 //        addNode(WaveletTransformation())
-        val graph = addNode(GraphNode())
+//        val graph = addNode(GraphNode())
 //        link(dataset.output, apod.inputRef)
-        link(dataset.output, graph.input)
+//        link(dataset.output, graph.input)
     }
 
     /**
