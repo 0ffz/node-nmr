@@ -24,21 +24,27 @@ fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
 //    }
 
 
-    collapsingHeader("Data sources") {
-        DragDropTransformationSource("Synthetic") { SyntheticDataset() }
-    }
-    collapsingHeader("Outputs") {
-        DragDropTransformationSource("Graph") { GraphNode() }
-        DragDropTransformationSource("Graph 2D") { Graph2DNode() }
-    }
-    collapsingHeader("Transformations") {
-        DragDropTransformationSource("Apodization") { ApodizationNode() }
-        DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
-        DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
-        DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
-        DragDropTransformationSource("Cadzow filter") { SVDCadzowFilter() }
-    }
+    collapsingHeader("1D") {
+        treeNode("Data sources") {
+            DragDropTransformationSource("Synthetic") { SyntheticDataset() }
+        }
+        treeNode("Outputs##1D") {
+            DragDropTransformationSource("Graph") { GraphNode() }
+        }
+        treeNode("Transformations") {
+            DragDropTransformationSource("Apodization") { ApodizationNode() }
+            DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
+            DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
+            DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
+            DragDropTransformationSource("Cadzow filter") { SVDCadzowFilter() }
+        }
 
+    }
+    collapsingHeader("2D") {
+        treeNode("Outputs##2D") {
+            DragDropTransformationSource("Graph 2D") { Graph2DNode() }
+        }
+    }
     collapsingHeader("Multi signal") {
         DragDropTransformationSource("Add noise") { NoiseAddingNode() }
         DragDropTransformationSource("Select signal") { SignalSelectNode() }

@@ -107,8 +107,8 @@ class Main : Application() {
         val bottomLeft = ImInt()
         ImGuiInternal.dockBuilderSplitNode(dockspaceId, ImGuiDir.Down, 0.5f, bottom, top)
         ImGuiInternal.dockBuilderSplitNode(bottom.get(), ImGuiDir.Left, 0.2f, bottomLeft, bottomRight)
-        ImGuiInternal.dockBuilderDockWindow("Graphs", top.get())
         ImGuiInternal.dockBuilderDockWindow("Graphs 2D", top.get())
+        ImGuiInternal.dockBuilderDockWindow("Graphs", top.get())
         ImGuiInternal.dockBuilderDockWindow("Nodes", bottomRight.get())
         ImGuiInternal.dockBuilderDockWindow("Singular Values", bottomLeft.get())
         ImGuiInternal.dockBuilderDockWindow("Spectra", bottomLeft.get())
@@ -131,15 +131,15 @@ class Main : Application() {
             setupDocking(dockspaceId)
         }
 
-        window("Graphs 2D") {
-            Graph2DScreen(
-                nodes = nodeGraph.nodes,
-            )
-        }
         withStyle(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f) {
             window("Graphs") {
                 GraphScreen(
                     nodeGraph.nodes,
+                )
+            }
+            window("Graphs 2D") {
+                Graph2DScreen(
+                    nodes = nodeGraph.nodes,
                 )
             }
         }

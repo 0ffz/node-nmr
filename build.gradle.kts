@@ -4,6 +4,7 @@ plugins {
     alias(miaLibs.plugins.compose.compiler)
     alias(miaLibs.plugins.jetbrainsCompose)
     alias(miaLibs.plugins.shadowjar)
+    alias(miaLibs.plugins.kotlinx.serialization)
     alias(miaLibs.plugins.mia.testing)
 }
 
@@ -29,6 +30,7 @@ dependencies {
     implementation("io.github.spair:imgui-java-app:1.92.0")
     implementation(miaLibs.kotlinx.coroutines.core)
     implementation(miaLibs.kotlinx.collections.immutable)
+    implementation(miaLibs.kotlinx.serialization.json)
     implementation(miaLibs.logback.classic)
     implementation(miaLibs.kotlin.reflect)
     implementation("org.jetbrains.compose.runtime:runtime:${miaLibs.versions.compose.asProvider().get()}")
