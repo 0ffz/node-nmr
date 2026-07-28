@@ -2,6 +2,10 @@ package me.dvyy.nmr.bindings.fftw
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
+private val fftwLock = ReentrantLock()
 
 /**
  * Represents a 1D FFTW Plan. 
@@ -31,10 +35,19 @@ class FftwPlan1D(
             vararg flags: FftwFlag = arrayOf(FftwFlag.ESTIMATE)
         ): FftwPlan1D {
             val flattenedFlags = flags.fold(0) { acc, flag -> acc or flag.value }
-            val planPointer: MemorySegment = (FftwBindings
-                .planDft1d
-                .invokeExact(size, inArray.segment, outArray.segment, direction.value, flattenedFlags) as MemorySegment)
-                .reinterpret(1, arena) { FftwBindings.destroyPlan.invokeExact(it) }
+            val planPointer = fftwLock.withLock {
+                FftwBindings.planDft1d.invokeExact(
+                    size,
+                    inArray.segment,
+                    outArray.segment,
+                    direction.value,
+                    flattenedFlags
+                ) as MemorySegment
+            }.reinterpret(1, arena) {
+                fftwLock.withLock {
+                    FftwBindings.destroyPlan.invokeExact(it)
+                }
+            }
             return FftwPlan1D(planPointer)
         }
     }

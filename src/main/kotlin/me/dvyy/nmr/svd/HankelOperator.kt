@@ -26,7 +26,7 @@ class HankelOperator(
 
     // 1. Calculate length and optimal padding length (next power of 2 for maximum FFT efficiency)
     private val targetLen = rows + cols - 1
-    private val fftLength = MathHelpers.nextPowerOfTwo(targetLen)
+    private val fftLength = MathHelpers.nextPowerOfTwo(targetLen + maxOf(rows, cols) - 1)
 
     // 2. Pre-allocate dedicated buffers for FFT operations to avoid allocations during multiply()
     private val fftIn = with(arena) { FftwComplexArray(fftLength) }
