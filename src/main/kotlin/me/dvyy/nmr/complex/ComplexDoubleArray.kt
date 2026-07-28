@@ -1,6 +1,7 @@
 package me.dvyy.nmr.complex
 
 import java.lang.foreign.MemorySegment
+import java.lang.foreign.Arena
 
 @JvmInline
 value class ComplexDoubleArray(
@@ -94,6 +95,15 @@ value class ComplexDoubleArray(
     fun toMemorySegment(): MemorySegment {
         return MemorySegment.ofArray(data)
     }
+
+    /** Allocates a new native [MemorySegment] and copies this array's data to it */
+    context(arena: Arena)
+    fun asMemorySegmentCopy(): MemorySegment {
+        val segment = arena.allocate(data.size * 8L)
+        MemorySegment.copy(data, 0, segment, java.lang.foreign.ValueLayout.JAVA_DOUBLE, 0, data.size)
+        return segment
+    }
+
     @Suppress("DuplicatedCode")
     override fun toString(): String {
         val sb = StringBuilder(2 + data.size * 3)

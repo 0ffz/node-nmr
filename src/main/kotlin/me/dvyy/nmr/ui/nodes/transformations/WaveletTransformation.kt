@@ -11,9 +11,16 @@ import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
 class WaveletTransformation : SignalTransformationNode() {
+    val waveletOptions = buildList {
+        for(i in 1..38) add("db$i")
+        add("bior2.2")
+        add("bior2.4")
+        add("bior2.6")
+    }
     override val name: String = "Wavelet denoise"
     var threshold by mutableStateOf(0.0001)
     var level by mutableStateOf(4)
+    var wavelet by mutableStateOf("bior2.2")
 
     override fun ImGuiKt.draw() {
         drawInput()
@@ -35,12 +42,14 @@ class WaveletTransformation : SignalTransformationNode() {
             val denoisedRe = WaveletHelpers.waveletDenoise(
                 fftRe,
                 threshold,
-                level
+                level,
+                wavelet
             )
             val denoisedIm = WaveletHelpers.waveletDenoise(
                 fftIm,
                 threshold,
-                level
+                level,
+                wavelet
             )
             Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
         }

@@ -9,26 +9,60 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  */
 package me.dvyy.nmr.evaluation
 
+import kotlin.math.abs
+import kotlin.math.pow
+
 /**
  * Structural similarity index implementation based on
  * [DESPARATE](https://github.com/rschurko/DESPERATE/blob/master/simulations/simpson.py)
  */
 object SSIM {
+    const val K1 = 0.01
+    const val K2 = 0.03
+
     /**
-     * Returns SSIM(x, y) - c where `c = SSIM(y, y) - 1`, such that the output is bounded between [-1, 1]
+     * Define a local window size (e.g., 11, 21, or 51 data points).
+     * Extract that small slice from both the clean signal $x$ and denoised signal $y$.
+     * Calculate the local $\mu, \sigma^2,$ and $\sigma_{xy}$ for those slices and compute the local SSIM.
+     * Slide the window over by one data point and repeat the process across the entire spectrum.
+     * Average all the local SSIM values to get the Mean SSIM (MSSIM).
      */
-    fun bounded(x: DoubleArray, y: DoubleArray): Double {
-        return of(x, y) - of(y, y) + 1
+    fun windowed(x: DoubleArray, y: DoubleArray, windowSize: Int = 11): Double {
+        val dynamicRange = (x.max() - x.min())
+        require(x.size == y.size) { "Signals must have the same length" }
+        if (x.size < windowSize) return of(x, y, dynamicRange)
+
+        var totalSSIM = 0.0
+        val numWindows = x.size - windowSize + 1
+
+        for (i in 0 until numWindows) {
+            val sliceX = x.copyOfRange(i, i + windowSize)
+            val sliceY = y.copyOfRange(i, i + windowSize)
+            totalSSIM += of(sliceX, sliceY, dynamicRange)
+        }
+
+        return totalSSIM / numWindows
     }
 
-    fun of(x: DoubleArray, y: DoubleArray): Double {
+    fun of(x: DoubleArray, y: DoubleArray, dynamicRange: Double): Double {
+        // 1. Safety checks MUST happen first to prevent .max() crashes
         require(x.size == y.size) { "Signals must have the same length" }
         val n = x.size
 
         // SSIM requires at least 2 points to calculate sample covariance
         if (n <= 1) return Double.NaN
 
-        // 1. Calculate Means
+        // 2. Establish Global Dynamic Range (L)
+        // Prefer passed-in global range, fallback to empirical range of 'x'
+        val l = dynamicRange
+
+        // Handle edge case where flat signal results in L = 0
+        val safeL = if (l == 0.0) 1.0 else l
+
+        val c1 = (K1 * safeL).pow(2.0)
+        val c2 = (K2 * safeL).pow(2.0)
+
+        // 3. Calculate Means
         val meanX = x.average()
         val meanY = y.average()
 
@@ -36,32 +70,28 @@ object SSIM {
         var sumSqY = 0.0
         var sumCovXY = 0.0
 
-        // 2. Calculate sums for variance and covariance in a single pass
+        // 4. Calculate sums for variance and covariance
         for (i in 0 until n) {
             val dx = x[i] - meanX
             val dy = y[i] - meanY
-
             sumSqX += dx * dx
             sumSqY += dy * dy
             sumCovXY += dx * dy
         }
 
-        // 3. Apply NumPy's specific degrees of freedom (ddof) defaults
-        // np.std(X)**2 uses ddof=0 (population variance)
-        val varX = sumSqX / n
-        val varY = sumSqY / n
+        // 5. Apply CONSISTENT degrees of freedom (n - 1 for sample statistics)
+        val degreesOfFreedom = (n - 1).toDouble()
+        val varX = sumSqX / degreesOfFreedom
+        val varY = sumSqY / degreesOfFreedom
+        val covXY = sumCovXY / degreesOfFreedom
 
-        // np.cov(X,Y) uses ddof=1 (sample covariance)
-        val covXY = sumCovXY / (n - 1)
+        // 6. Calculate SSIM
+        val numerator = (2 * meanX * meanY + c1) * (2 * covXY + c2)
+        val denominator = (meanX * meanX + meanY * meanY + c1) * (varX + varY + c2)
 
-        // 4. Calculate SSIM
-        // Note: The original Python code had +0 for stability constants (C1, C2)
-        val numerator = (2 * meanX * meanY) * (2 * covXY)
-        val denominator = (meanX * meanX + meanY * meanY) * (varX + varY)
-
-        // Avoid division by zero if both signals are completely flat/zero
-        return if (denominator == 0.0) {
-            if (numerator == 0.0) 1.0 else 0.0
+        // 7. Safer Floating Point comparison
+        return if (abs(denominator) < 1e-10) {
+            if (abs(numerator) < 1e-10) 1.0 else 0.0
         } else {
             numerator / denominator
         }

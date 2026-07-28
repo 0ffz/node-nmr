@@ -22,8 +22,9 @@ object WaveletHelpers {
         input: DoubleArray,
         threshold: Double = 0.1,
         level: Int = 4,
+        waveletName: String = "db2",
     ): DoubleArray {
-        return StationaryWaveletTransform(waveletName = "db2", signalLength = input.size, level = level).use { swt ->
+        return StationaryWaveletTransform(waveletName = waveletName, signalLength = input.size, level = level).use { swt ->
             val waveletIm = swt.forward(input)
             waveletIm.applySoftThreshold(start = input.size, threshold)
             swt.inverse(waveletIm)

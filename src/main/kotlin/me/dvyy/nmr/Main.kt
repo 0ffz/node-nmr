@@ -17,10 +17,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.bindings.propack.PropackBindings
-import me.dvyy.nmr.bindings.wavelib.WavelibBindings
 import me.dvyy.nmr.helpers.loadFromResources
-import me.dvyy.nmr.parsing.BrukerDataset
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.Graph2DScreen
 import me.dvyy.nmr.ui.graphs.GraphScreen
@@ -53,6 +50,7 @@ class TriggeredCoroutineDispatcher(val name: String) : CoroutineDispatcher() {
 
 object AppDispatchers {
     val Frontend = TriggeredCoroutineDispatcher("Frontend")
+    val scope = CoroutineScope(Dispatchers.IO)
 }
 
 @OptIn(ExperimentalAtomicApi::class)
@@ -81,6 +79,7 @@ class Main : Application() {
             glyphRanges = shortArrayOf(0xE000.toShort(), 0xF8FF.toShort(), 0)
         })
         io.fonts.build()
+        ImGui.styleColorsLight()
         io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)  // Enable Keyboard Controls
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)      // Enable Docking
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)

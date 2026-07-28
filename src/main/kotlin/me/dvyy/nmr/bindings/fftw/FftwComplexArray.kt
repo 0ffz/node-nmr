@@ -18,6 +18,8 @@ value class FftwComplexArray private constructor(
     val size: Int get() = (segment.byteSize() / Sizes.COMPLEX).toInt()
 
     init {
+//        require(size > 0 && (size and (size - 1)) == 0) { "Size must be a power of 2, but was $size" }
+
         if (segment == MemorySegment.NULL) {
             throw OutOfMemoryError("fftw_malloc failed to allocate native memory.")
         }

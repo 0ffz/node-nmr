@@ -18,14 +18,15 @@ class DatasetNode(
 ) : Node() {
     override val name: String = dataset.name
     var offset by mutableStateOf(dataset.offset)
-
+val numSamples = dataset.numSamples
     val output = outputAttribute {
         val data = dataset.readFid().removeDigitalFilter(dataset.acqus)
         data.data.asF64Array().let { it /= it.max() }
         val fid = Signal.Fid(data)
         SignalUiState(
             signal = fid,
-            offset = dataset.offset,
+            offset = offset,
+            widthPPM = dataset.widthPPM,
             phaseParams = data.findOptimalPhaseParameters()
         )
     }
@@ -36,6 +37,7 @@ class DatasetNode(
                 text("Out")
             }
         }
+        text("Samples: $numSamples")
         dragDouble("offset", offset, onChange = { offset = it })
     }
 }

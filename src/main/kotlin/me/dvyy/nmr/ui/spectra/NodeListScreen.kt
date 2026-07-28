@@ -11,7 +11,9 @@ import me.dvyy.nmr.ui.nodes.multiscan.MultiScanAverage
 import me.dvyy.nmr.ui.nodes.multiscan.MultiScanWaveletNode
 import me.dvyy.nmr.ui.nodes.multiscan.NoiseAddingNode
 import me.dvyy.nmr.ui.nodes.multiscan.SignalSelectNode
+import me.dvyy.nmr.ui.nodes.outputs.ExportNode
 import me.dvyy.nmr.ui.nodes.outputs.Graph2DNode
+import me.dvyy.nmr.ui.nodes.outputs.SSIMNode
 import me.dvyy.nmr.ui.nodes.transformations.PhaseCorrectTransformation
 import me.dvyy.nmr.ui.nodes.transformations.SVDCadzowFilter
 import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
@@ -30,6 +32,8 @@ fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
         }
         treeNode("Outputs##1D") {
             DragDropTransformationSource("Graph") { GraphNode() }
+            DragDropTransformationSource("SSIM") { SSIMNode() }
+            DragDropTransformationSource("Export") { ExportNode() }
         }
         treeNode("Transformations") {
             DragDropTransformationSource("Apodization") { ApodizationNode() }

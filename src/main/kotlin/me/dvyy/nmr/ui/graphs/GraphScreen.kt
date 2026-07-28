@@ -162,7 +162,7 @@ fun ImGuiKt.GraphScreen(
 //        }
 //        ImGui.endCombo()
 //    }
-    subplots("##plots", rows = 2, cols = 1, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
+    subplots("##plots", rows = 2, cols = 1){//, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
         plot("Spectra") {
             nodes.forEach { node ->
                 if (node !is GraphEmitting) return@forEach
@@ -185,8 +185,15 @@ fun ImGuiKt.GraphScreen(
                 if (signal != Signal.Empty) {
                     val spec = implotSpec {
                         if (graph.color != null) lineColor = graph.color.toImVec4()
+                        lineWeight = 2f
                     }
-                    line(graph.title, signal.graphFft, xStart = signal.offset, spec = spec)
+                    line(
+                        graph.title,
+                        signal.graphFft,
+                        xStart = signal.offset - signal.widthPPM,
+                        xScale = signal.widthPPM / signal.graphFft.size,
+                        spec = spec
+                    )
                 }
             }
         }

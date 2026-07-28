@@ -6,6 +6,7 @@ import me.dvyy.nmr.complex.ComplexDoubleMatrix
 import java.lang.foreign.Arena
 import java.lang.foreign.ValueLayout.JAVA_DOUBLE
 import java.lang.foreign.ValueLayout.JAVA_INT
+import kotlin.math.min
 
 object Propack {
     context(arena: Arena)
@@ -15,7 +16,7 @@ object Propack {
         cols: Int,
         numWanted: Int,
     ): SVDResult {
-        val dim = numWanted * 2
+        val dim = (numWanted * 2 + 1).coerceAtLeast(20).coerceAtMost(min(rows, cols))
 
         // Allocate Matrix Arrays (Sizes based on PROPACK documentation)
         val uMatrix = arena.allocate(JAVA_DOUBLE, (rows * (dim + 1) * 2L)) // *2 for complex
@@ -54,8 +55,7 @@ object Propack {
         val zParm = arena.allocate(JAVA_DOUBLE, 2L)
         val iParm = arena.allocate(JAVA_INT, 1L)
 
-        // Define your high-performance matrix-vector multiplier
-
+        val shiftsPerRestart = dim - numWanted
         // Execute the Lanczos SVD
         val info = PropackBindings.zlansvdIrl(
             arena = arena,
@@ -65,7 +65,7 @@ object Propack {
             mRows = rows,
             nCols = cols,
             dim = dim,
-            shiftsPerRestart = 2,
+            shiftsPerRestart = shiftsPerRestart,
             numWanted = numWanted,
             maxRestarts = 1000,
             aprod = operator,

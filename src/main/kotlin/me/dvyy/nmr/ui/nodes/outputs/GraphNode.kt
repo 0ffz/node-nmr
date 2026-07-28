@@ -29,11 +29,11 @@ class GraphNode : Node(), GraphEmitting {
     var color by mutableStateOf<Color?>(null)
     val string = ImString(title, 42)
     var autoPhase by mutableStateOf(false)
+    var yOffset by mutableStateOf(0.0)
     val input = inputAttribute<SignalUiState?>()
 
     override fun ImGuiKt.draw() {
         if (ImGui.inputText("Title", string)) {
-            println("Text changed")
             title = string.get()
         }
         with(ImNodeContext) {
@@ -44,14 +44,15 @@ class GraphNode : Node(), GraphEmitting {
         if (ImGui.checkbox("Auto Phase", bool)) {
             autoPhase = bool.get()
         }
+        dragDouble("Y Offset", yOffset, scaleNearZero = false, onChange = { yOffset = it })
     }
 
     override val graph: GraphUiState? by derivedStateOf {
         val input = input.value ?: return@derivedStateOf null
         val phased = if (autoPhase) {
-            input.signal.fid.findOptimalPhaseParameters()
+            input.signal.fft.findOptimalPhaseParameters()
         } else input.phaseParams
-        GraphUiState(title, input.copy(phaseParams = phased), color)
+        GraphUiState(title, input.copy(phaseParams = phased, yOffset = yOffset), color)
     }
 }
 

@@ -7,6 +7,8 @@ import org.jetbrains.bio.viktor.asF64Array
 data class SignalUiState(
     val signal: Signal,
     val offset: Double = 0.0,
+    val widthPPM: Double = 1.0,
+    val yOffset: Double = 0.0,
     val phaseParams: PhaseParams = PhaseParams(0.0, 0.0),
 ) {
     val graphFid: DoubleArray by lazy {
@@ -16,7 +18,9 @@ data class SignalUiState(
     val graphFft: DoubleArray by lazy {
         if (signal.fft.size == 0) return@lazy doubleArrayOf()
         val (p0, p1) = phaseParams
-        signal.fft.phaseCorrect(p0, p1).real()
+        val fft = signal.fft.phaseCorrect(p0, p1).real()
+        fft.asF64Array() += yOffset
+        fft
     }
     val graphWavelet: DoubleArray by lazy { signal.wavelet.real() }
     val waveletLevels: IntArray by lazy {

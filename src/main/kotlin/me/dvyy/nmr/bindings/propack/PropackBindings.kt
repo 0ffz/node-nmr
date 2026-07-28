@@ -26,19 +26,23 @@ object PropackBindings {
         *Array(28) { ValueLayout.ADDRESS }
     )
     private val ZLANSVD_DESC = FunctionDescriptor.ofVoid(
-        *Array(28) { ValueLayout.ADDRESS }
+        *Array(25) { ValueLayout.ADDRESS }
     )
 
-    private val zlansvdHandle by lazy {
+    private val zlanSvdIrlHandle by lazy {
+        val symbolLookup = SymbolLookup.loaderLookup()
+        val funcMemoryIrl = symbolLookup.find("zlansvd_irl_").orElseThrow {
+            IllegalStateException("Could not find zlansvd_irl_ in loaded libraries. Ensure libzpropack.so is loaded.")
+        }
+        linker.downcallHandle(funcMemoryIrl, ZLANSVD_IRL_DESC)
+    }
+
+    private val zlanSvdHandle by lazy {
         val symbolLookup = SymbolLookup.loaderLookup()
         val funcMemory = symbolLookup.find("zlansvd_").orElseThrow {
             IllegalStateException("Could not find zlansvd_ in loaded libraries. Ensure libzpropack.so is loaded.")
         }
-        val funcMemoryIrl = symbolLookup.find("zlansvd_irl_").orElseThrow {
-            IllegalStateException("Could not find zlansvd_irl_ in loaded libraries. Ensure libzpropack.so is loaded.")
-        }
         linker.downcallHandle(funcMemory, ZLANSVD_DESC)
-        linker.downcallHandle(funcMemoryIrl, ZLANSVD_IRL_DESC)
     }
 
     // Descriptor for the APROD callback (7 pointers)
@@ -212,11 +216,170 @@ object PropackBindings {
         val aprodStub = createAprodStub(arena, aprod)
 
         // 3. Invoke Fortran
-        zlansvdHandle.invokeExact(
+        zlanSvdIrlHandle.invokeExact(
             pWhich, pJobU, pJobV, pM, pN, pDim, pP, pNWanted, pMaxIter,
             aprodStub, uMatrix, pLdu, sigmaValues, errorBounds, vMatrix, pLdv,
             pTolin, work, pLWork, zWork, pLZWork, iWork, pLIWork,
             dOption, iOption, pInfo, zParm, iParm
+        )
+
+        // 4. Return the resulting info code
+        return pInfo.get(JAVA_INT, 0L)
+    }
+
+    /**
+     * subroutine zlansvd(jobu,jobv,m,n,k,kmax,aprod,U,ldu,Sigma,bnd,
+     *    V,ldv,tolin,work,lwork,zwork,lzwork,iwork,liwork,doption,
+     *    ioption,info,zparm,iparm)
+     *
+     *      ZLANSVD: Compute the leading singular triplets of a large and
+     *      sparse matrix by Lanczos bidiagonalization with partial
+     *      reorthogonalization.
+     *
+     *      Parameters:
+     *
+     *      JOBU: CHARACTER*1. If JOBU.EQ.'Y' then compute the left singular vectors.
+     *            Otherwise the array U is not touched.
+     *      JOBV: CHARACTER*1. If JOBV.EQ.'Y' then compute the right singular
+     *            vectors. Otherwise the array V is not touched.
+     *      M: INTEGER. Number of rows of A.
+     *      N: INTEGER. Number of columns of A.
+     *      K: INTEGER. Number of desired singular triplets. K <= MIN(KMAX,M,N)
+     *      KMAX: INTEGER. maximal number of iterations / maximal dimension of
+     *            Krylov subspace.
+     *      APROD: Subroutine defining the linear operator A.
+     *             APROD should be of the form:
+     *
+     *            SUBROUTINE APROD(TRANSA,M,N,X,Y,ZPARM,IPARM)
+     *            CHARACTER*1 TRANSA
+     *            INTEGER M,N,IPARM(*)
+     *            DOUBLE COMPLEX X(*),Y(*),ZPARM(*)
+     *
+     *            If TRANSA.EQ.'N' then the function should compute the matrix-vector
+     *            product Y = A * X.
+     *            If TRANSA.EQ.'C' then the function should compute the matrix-vector
+     *            product Y = A^H * X, where A^H is the conjugate transpose (adjoint)
+     *            of A.
+     *            The arrays IPARM and ZPARM are a means to pass user supplied
+     *            data to APROD without the use of common blocks.
+     *      U(LDU,KMAX+1): DOUBLE COMPLEX array. On return the first K columns of U
+     *                will contain approximations to the left singular vectors
+     *                corresponding to the K largest singular values of A.
+     *                On entry the first column of U contains the starting vector
+     *                for the Lanczos bidiagonalization. A random starting vector
+     *                is used if U is zero.
+     *      LDU: INTEGER. Leading dimension of the array U. LDU >= M.
+     *      SIGMA(K): DOUBLE PRECISION array. On return Sigma contains approximation
+     *                to the K largest singular values of A.
+     *      BND(K)  : DOUBLE PRECISION array. Error estimates on the computed
+     *                singular values. The computed SIGMA(I) is within BND(I)
+     *                of a singular value of A.
+     *      V(LDV,KMAX): DOUBLE COMPLEX array. On return the first K columns of V
+     *                will contain approximations to the right singular vectors
+     *                corresponding to the K largest singular values of A.
+     *      LDV: INTEGER. Leading dimension of the array V. LDV >= N.
+     *      TOLIN: DOUBLE PRECISION. Desired accuracy of computed singular values.
+     *             SIGMA(K) is considered converged when
+     *             BND(K) <= MAX(TOLIN*SIGMA(K), 16*EPS*||A||)
+     *      WORK(LWORK): DOUBLE PRECISION array. Workspace of dimension LWORK.
+     *      LWORK: INTEGER. Dimension of WORK.
+     *             If JOBU.EQ.'N' and JOBV.EQ.'N' then  LWORK should be at least
+     *             M + N + 9*KMAX + 2*KMAX**2 + 4 + MAX(M,N,4*KMAX+4).
+     *             If JOBU.EQ.'Y' or JOBV.EQ.'Y' then LWORK should be at least
+     *             M + N + 9*KMAX + 5*KMAX**2 + 4 +
+     *             MAX(3*KMAX**2+4*KMAX+4, NB*MAX(M,N)), where NB>0 is a block
+     *             size, which determines how large a fraction of the work in
+     *             setting up the singular vectors is done using fast BLAS-3
+     *             operation.
+     *      ZWORK: DOUBLE COMPLEX array of dimension LZWORK.
+     *      LZWORK: INTEGER. Dimension of ZWORK.
+     *              If JOBU.EQ.'N' and JOBV.EQ.'N' then LZWORK should be at least
+     *              M + N.
+     *              If JOBU.EQ.'Y' or JOBV.EQ.'Y' then LZWORK should be at least
+     *              M + N + NB*MAX(M,N), where NB>0 is a block size, which determines
+     *              how large a fraction of the work in setting up the singular
+     *              vectors is done using fast BLAS-3 operations.
+     *      IWORK: INTEGER array. Integer workspace of dimension LIWORK.
+     *      LIWORK: INTEGER. Dimension of IWORK. Should be at least 8*KMAX if
+     *              JOBU.EQ.'Y' or JOBV.EQ.'Y' and at least 2*KMAX+1 otherwise.
+     *      DOPTION: DOUBLE PRECISION array. Parameters for LANBPRO.
+     *         doption(1) = delta. Level of orthogonality to maintain among
+     *           Lanczos vectors.
+     *         doption(2) = eta. During reorthogonalization, all vectors with
+     *           with components larger than eta along the latest Lanczos vector
+     *           will be purged.
+     *         doption(3) = anorm. Estimate of || A ||.
+     *      IOPTION: INTEGER array. Parameters for LANBPRO.
+     *         ioption(1) = MGS.  If MGS.EQ.1 then reorthogonalization is done
+     *           using iterated modified Gram-Schmidt. If MGS.EQ.0 (default)
+     *           then reorthogonalization is done using iterated classical
+     *           Gram-Schmidt.
+     *         ioption(2) = ELR. If ELR.EQ.1 then extended local orthogonality is
+     *           enforced among u_{k}, u_{k+1} and v_{k} and v_{k+1} respectively.
+     *      INFO: INTEGER.
+     *          INFO = 0: The K largest singular triplets were computed successfully
+     *          INFO = J>0, J<K: An invariant subspace of dimension J was found.
+     *          INFO = J<0, |J|<K: Only |J| of K singular triplets converged within
+     *            KMAX iterations.
+     *      ZPARM: DOUBLE COMPLEX array. Array used for passing data to the APROD
+     *          function.
+     *      IPARM: INTEGER array. Array used for passing data to the APROD
+     *          function.
+     *
+     *      (C) Rasmus Munk Larsen, Stanford, 1999, 2004
+     */
+    fun zlansvd(
+        arena: Arena,
+        computeU: ComputeVectors,
+        computeV: ComputeVectors,
+        mRows: Int,
+        nCols: Int,
+        numWanted: Int,
+        dim: Int,
+        aprod: LinearOperator,
+        uMatrix: MemorySegment,
+        ldu: Int,
+        sigmaValues: MemorySegment,
+        errorBounds: MemorySegment,
+        vMatrix: MemorySegment,
+        ldv: Int,
+        tolerance: Double,
+        work: MemorySegment,
+        workSize: Int,
+        zWork: MemorySegment,
+        zWorkSize: Int,
+        iWork: MemorySegment,
+        iWorkSize: Int,
+        dOption: MemorySegment,
+        iOption: MemorySegment,
+        zParm: MemorySegment,
+        iParm: MemorySegment,
+    ): Int {
+        // 1. Allocate scalar pointers in the provided Arena
+//        val pWhich = arena.allocateFrom(JAVA_BYTE, target.code)
+        val pJobU = arena.allocateFrom(JAVA_BYTE, computeU.code)
+        val pJobV = arena.allocateFrom(JAVA_BYTE, computeV.code)
+        val pM = arena.allocateFrom(JAVA_INT, mRows)
+        val pN = arena.allocateFrom(JAVA_INT, nCols)
+        val pKMax = arena.allocateFrom(JAVA_INT, dim)
+        val pKWanted = arena.allocateFrom(JAVA_INT, numWanted)
+        val pLdu = arena.allocateFrom(JAVA_INT, ldu)
+        val pLdv = arena.allocateFrom(JAVA_INT, ldv)
+        val pTolin = arena.allocateFrom(ValueLayout.JAVA_DOUBLE, tolerance)
+        val pLWork = arena.allocateFrom(JAVA_INT, workSize)
+        val pLZWork = arena.allocateFrom(JAVA_INT, zWorkSize)
+        val pLIWork = arena.allocateFrom(JAVA_INT, iWorkSize)
+        val pInfo = arena.allocateFrom(JAVA_INT, 0) // Output parameter
+
+        // 2. Setup the Upcall Stub for APROD
+        val aprodStub = createAprodStub(arena, aprod)
+
+        // 3. Invoke Fortran
+        zlanSvdHandle.invokeExact(
+            pJobU, pJobV, pM, pN, pKWanted, pKMax,
+            aprodStub, uMatrix, pLdu, sigmaValues, errorBounds,
+            vMatrix, pLdv, pTolin, work, pLWork, zWork, pLZWork, iWork, pLIWork, dOption,
+            iOption, pInfo, zParm, iParm,
         )
 
         // 4. Return the resulting info code

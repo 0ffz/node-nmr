@@ -37,8 +37,8 @@ class HankelOperator(
     private val fidConjFft = with(arena) { FftwComplexArray(fftLength) }
 
     // 4. Reusable forward and backward transform plans using the pre-allocated buffers
-    private val planForward =  with(arena) {FftwPlan1D(fftLength, fftIn, fftOut, FORWARD, FftwFlag.ESTIMATE) }
-    private val planBackward =  with(arena) { FftwPlan1D(fftLength, fftIn, fftOut, BACKWARD, FftwFlag.ESTIMATE) }
+    private val planForward = with(arena) { FftwPlan1D(fftLength, fftIn, fftOut, FORWARD, FftwFlag.MEASURE) }
+    private val planBackward = with(arena) { FftwPlan1D(fftLength, fftIn, fftOut, BACKWARD, FftwFlag.MEASURE) }
 
     init {
         val requiredBytes = targetLen * Sizes.COMPLEX

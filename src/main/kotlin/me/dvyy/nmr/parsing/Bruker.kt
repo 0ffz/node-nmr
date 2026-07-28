@@ -69,6 +69,9 @@ class BrukerDataset(private val directoryPath: String) {
     val totalSpectralWidth by lazy { procs["SW_p"]!!.toDouble() }
     val spectrometerFrequency by lazy { procs["SF"]!!.toDouble() }
     val offset by lazy { procs["OFFSET"]!!.toDouble() }
+    val widthPPM get() = totalSpectralWidth / spectrometerFrequency
+
+    val numSamples by lazy { acqus["NS"]!!.toInt() }
 
     // Strongly typed parameters extracted from the dictionary
     val params: AcquisitionParams by lazy {
@@ -90,6 +93,7 @@ class BrukerDataset(private val directoryPath: String) {
     }
 
     val is2D: Boolean get() = File(dir, "ser").exists()
+
     /**
      * Reads the 1D 'fid' file and returns a Multik 1D array of ComplexDouble.
      */

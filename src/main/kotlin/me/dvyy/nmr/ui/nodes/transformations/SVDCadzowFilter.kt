@@ -3,21 +3,30 @@ package me.dvyy.nmr.ui.nodes.transformations
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
+import imgui.ImVec2
 import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.propack.Propack
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.svd.HankelOperator
+import me.dvyy.nmr.svd.HankelOperatorBruteForce
 import me.dvyy.nmr.svd.reconstructDiagonals
+import java.lang.foreign.MemorySegment
 
 class SVDCadzowFilter : SignalTransformationNode() {
     override val name: String = "SVD"
     var numValues by mutableStateOf(10)
+    var singularValues by mutableStateOf(doubleArrayOf())
 
     override fun ImGuiKt.draw() {
         drawInput()
         sliderInt("numValues", numValues, min = 1, max = 100, onChange = { numValues = it })
+
+        plot("Singular values", ImVec2(200f, 200f)) {
+            line("values", singularValues)
+        }
     }
 
     // TODO long-running background calculations
@@ -28,10 +37,9 @@ class SVDCadzowFilter : SignalTransformationNode() {
         val numValues = numValues
         return compute {
             val denoised = memScoped {
-//                val hankel = HankelOperatorBruteForce(fid.toMemorySegment())
-                val hankel = HankelOperator(this, fid.toMemorySegment(), rows, cols)
+                val hankel = HankelOperator(this, fid.asMemorySegmentCopy(), rows, cols)
                 val result = Propack.partialComplexSVD(hankel, rows, cols, numWanted = numValues)
-//            svdResults += result.singularValues
+                singularValues = result.singularValues
                 result.reconstructDiagonals()
             }
             Signal.Fid(denoised)
