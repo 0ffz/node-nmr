@@ -17,11 +17,6 @@ import me.dvyy.nmr.bindings.imgui.ImGuiKt
 fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
     ImNodes.editorContextSet(graph.editorContext)
     ImNodes.getIO().altMouseButton = ImGuiMouseButton.Middle
-    val bgColor = ImGui.getColorU32(ImGuiCol.WindowBg)
-    ImNodes.pushColorStyle(ImNodesCol.GridBackground, bgColor)
-    ImNodes.pushColorStyle(ImNodesCol.NodeBackground, bgColor)
-    ImNodes.pushColorStyle(ImNodesCol.NodeBackgroundHovered, bgColor)
-    ImNodes.pushColorStyle(ImNodesCol.NodeBackgroundSelected, bgColor)
     ImNodes.beginNodeEditor()
     for (node in graph.nodes) {
         NodeUi(node)
@@ -36,10 +31,6 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
 //    }
     ImNodes.miniMap(0.2f, ImNodesMiniMapLocation.BottomRight)
     ImNodes.endNodeEditor()
-    ImNodes.popColorStyle()
-    ImNodes.popColorStyle()
-    ImNodes.popColorStyle()
-    ImNodes.popColorStyle()
 
     val start = ImInt(0)
     val end = ImInt(0)

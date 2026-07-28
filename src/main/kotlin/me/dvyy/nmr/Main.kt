@@ -97,6 +97,7 @@ class Main : Application() {
     }
 
     fun init() {
+        menuViewModel.updateColors()
     }
 
     fun setupDocking(dockspaceId: Int) {

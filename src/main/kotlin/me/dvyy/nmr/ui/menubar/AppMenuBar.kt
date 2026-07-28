@@ -15,5 +15,6 @@ fun ImGuiKt.AppMenuBar(
     }
     menu("View") {
         if (menuItem("Reset layout")) state.first = true
+        if (menuItem("Dark Mode", "", menu.isDarkMode)) menu.toggleDarkMode()
     }
 }
