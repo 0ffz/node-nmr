@@ -1,5 +1,6 @@
 package me.dvyy.nmr.synthetic
 
+import kotlinx.serialization.Serializable
 import me.dvyy.nmr.complex.ComplexDouble
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import kotlin.math.PI
@@ -11,6 +12,7 @@ import java.util.Random
 /**
  * Data class representing a single NMR resonance.
  */
+@Serializable
 data class Resonance(
     val amplitude: Double,
     val frequencyHz: Double,

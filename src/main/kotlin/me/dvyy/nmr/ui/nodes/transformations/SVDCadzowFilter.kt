@@ -15,9 +15,11 @@ import me.dvyy.nmr.svd.HankelOperatorBruteForce
 import me.dvyy.nmr.svd.reconstructDiagonals
 import java.lang.foreign.MemorySegment
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+import me.dvyy.nmr.ui.nodes.nodeState
+
 class SVDCadzowFilter : SignalTransformationNode() {
-    override val name: String = "SVD"
-    var numValues by mutableStateOf(10)
+    var numValues by nodeState(10)
     var singularValues by mutableStateOf(doubleArrayOf())
 
     override fun ImGuiKt.draw() {
@@ -45,5 +47,11 @@ class SVDCadzowFilter : SignalTransformationNode() {
             Signal.Fid(denoised)
         }
 //        denoised[0] /= 2
+    }
+
+
+    companion object : NodeInfo<SVDCadzowFilter> {
+        override val name = "SVD"
+        override val factory = ::SVDCadzowFilter
     }
 }

@@ -8,8 +8,9 @@ import me.dvyy.nmr.evaluation.SSIM
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class SSIMNode: Node() {
-    override val name: String = "SSIM"
     val input = inputAttribute<SignalUiState?>()
     val reference = inputAttribute<SignalUiState?>()
     val ssim by derivedStateOf {
@@ -17,6 +18,7 @@ class SSIMNode: Node() {
         val ref = reference.value?.graphFft ?: return@derivedStateOf null
         SSIM.windowed(inp, ref)
     }
+
     override fun ImGuiKt.draw() {
         with(ImNodeContext) {
             inputAttribute(input.id) { text("Input") }
@@ -24,5 +26,10 @@ class SSIMNode: Node() {
         }
 
         text("SSIM: $ssim")
+    }
+
+    companion object : NodeInfo<SSIMNode> {
+        override val name = "SSIM"
+        override val factory = ::SSIMNode
     }
 }

@@ -124,7 +124,7 @@ class Main : Application() {
 
         val dockspaceId = ImGui.dockSpaceOverViewport()
         mainMenuBar {
-            AppMenuBar(state, menuViewModel)
+            AppMenuBar(state, menuViewModel, nodeGraph)
         }
         if (state.first) {
             state.first = false

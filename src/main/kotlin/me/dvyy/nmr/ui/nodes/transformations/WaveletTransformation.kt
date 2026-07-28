@@ -10,17 +10,13 @@ import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.wavelet.WaveletHelpers
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+import me.dvyy.nmr.ui.nodes.nodeState
+
 class WaveletTransformation : SignalTransformationNode() {
-    val waveletOptions = buildList {
-        for(i in 1..38) add("db$i")
-        add("bior2.2")
-        add("bior2.4")
-        add("bior2.6")
-    }
-    override val name: String = "Wavelet denoise"
-    var threshold by mutableStateOf(0.0001)
-    var level by mutableStateOf(4)
-    var wavelet by mutableStateOf("bior2.2")
+    var threshold by nodeState(0.0001)
+    var level by nodeState(4)
+    var wavelet by nodeState("bior2.2")
 
     override fun ImGuiKt.draw() {
         drawInput()
@@ -53,5 +49,10 @@ class WaveletTransformation : SignalTransformationNode() {
             )
             Signal.Fft(ComplexDoubleArray.from(denoisedRe, denoisedIm))
         }
+    }
+
+    companion object : NodeInfo<WaveletTransformation> {
+        override val name = "Wavelet denoise"
+        override val factory = ::WaveletTransformation
     }
 }

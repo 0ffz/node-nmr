@@ -53,6 +53,7 @@ data class AcquisitionParams(
  */
 class BrukerDataset(private val directoryPath: String) {
     private val dir = File(directoryPath)
+    val path = dir.toPath()
     val name = dir.name
 
     private val procFile = dir.toPath() / "pdata" / "1" / "procs"

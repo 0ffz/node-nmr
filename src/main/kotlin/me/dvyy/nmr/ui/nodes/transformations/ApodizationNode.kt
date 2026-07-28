@@ -15,13 +15,15 @@ import me.dvyy.nmr.signal.gaussApodized
 import me.dvyy.nmr.ui.nodes.GraphEmitting
 import me.dvyy.nmr.ui.nodes.GraphUiState
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+import me.dvyy.nmr.ui.nodes.nodeState
+
 class ApodizationNode : SignalTransformationNode(), GraphEmitting {
-    override val name: String = "Apodization"
-    var lb by mutableStateOf(0.0001)
-    var gauss by mutableStateOf(0.0)
-    var beta by mutableStateOf(15.0)
-    var lPrime by mutableStateOf(4000)
-    var graphApodizationLine by mutableStateOf(false)
+    var lb by nodeState(0.0001)
+    var gauss by nodeState(0.0)
+    var beta by nodeState(15.0)
+    var lPrime by nodeState(4000)
+    var graphApodizationLine by nodeState(false)
 
     override fun ImGuiKt.draw() {
         drawInput()
@@ -65,6 +67,11 @@ class ApodizationNode : SignalTransformationNode(), GraphEmitting {
             ), beta = beta, lPrime = lPrime
         )
         GraphUiState("Apodization", SignalUiState(Signal.Fid(signal)))
+    }
+
+    companion object : NodeInfo<ApodizationNode> {
+        override val name = "Apodization"
+        override val factory = ::ApodizationNode
     }
 }
 

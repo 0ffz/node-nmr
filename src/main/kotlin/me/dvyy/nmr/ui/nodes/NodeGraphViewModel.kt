@@ -4,87 +4,82 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import imgui.extension.imnodes.ImNodes
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.dialogs.openFileSaver
+import io.github.vinceglb.filekit.readBytes
+import io.github.vinceglb.filekit.writeString
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
-import me.dvyy.nmr.ui.nodes.outputs.GraphNode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import me.dvyy.nmr.nodes.format.Project
+import me.dvyy.nmr.nodes.format.ProjectConverter
 
-class NodeGraphViewModel() {
-
-    companion object {
-        var id = 1
-        fun nextId(): Int = id++
-
-    }
-
+class NodeGraphViewModel(
+    val repository: NodeRepository = NodeRepository()
+) {
     init {
         ImNodes.createContext()
     }
 
     val editorContext = ImNodes.editorContextCreate()
-
-    var nodes by mutableStateOf<PersistentList<Node>>(persistentListOf())
-    private val _links = mutableSetOf<NodeLink>()
-    private val linkIds = mutableListOf<Int>()
-    val links: Set<NodeLink> = _links
+    val nodes: PersistentList<Node> get() = repository.nodes
+    val links: Set<NodeLink> get() = repository.links
     var selectedNode by mutableStateOf(-1)
-    init {
+    val scope = CoroutineScope(Dispatchers.IO)
 
-//        val dataset = addNode(DatasetNode(dataset))
-//        val apod = addNode(ApodizationTransformation())
-//        addNode(WaveletTransformation())
-//        val graph = addNode(GraphNode())
-//        link(dataset.output, apod.inputRef)
-//        link(dataset.output, graph.input)
+    private val json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
     }
 
-    /**
-     * Links the output of an [from] node to the input of an [into] node
-     */
     fun link(from: OutputAttribute<*>, into: InputAttribute<*>) {
-        if (from.pipeInto(into)) {
-            _links.removeIf { it.into.id == into.id }
-            _links.add(NodeLink(id++, from, into))
-        }
+        repository.link(from, into)
     }
 
     fun unlink(linkId: Int) {
-        val link = _links.find { it.id == linkId } ?: return
-        _links.remove(link)
-        link.into.removePipe()
+        repository.unlink(linkId)
     }
 
     fun removeNode(id: Int) {
-        val index = nodes.indexOfFirst { it.id == id }.takeIf { it != -1 } ?: return
-        val node = nodes[index]
-        nodes = nodes.removeAt(index)
-        node.attributes.forEach { attr ->
-            val id = attr.id
-            _links.toList().forEach {
-                if (it.from.id == id || it.into.id == id) {
-                    unlink(it.id)
-                }
-            }
-
-        }
+        repository.removeNode(id)
     }
 
     fun findAttribute(id: Int): Attribute<*>? {
-        nodes.forEach {
-            it.attributes.forEach { attr -> if (attr.id == id) return attr }
-        }
-        return null
+        return repository.findAttribute(id)
     }
-//    fun loadDataset(dataset: SignalProviding, name: String): Node {
-//        val node = Node(id++, name, dataset, outputId = id++, inputId = null)
-//        nodes = nodes.add(node)
-//        return node
-//    }
 
     fun <T : Node> addNode(node: T): T {
-        nodes = nodes.add(node)
-        return node
+        return repository.addNode(node)
+    }
+
+    fun clearProject() {
+        repository.clear()
+    }
+
+    fun saveProject() {
+        scope.launch {
+            val project = ProjectConverter.exportProject(repository)
+            val jsonString = json.encodeToString(Project.serializer(), project)
+            val file = FileKit.openFileSaver("project", defaultExtension = "json") ?: return@launch
+            file.writeString(jsonString)
+        }
+    }
+
+    fun loadProject() {
+        scope.launch {
+            val file = FileKit.openFilePicker(dialogSettings = FileKitDialogSettings(title = "Open Project File")) ?: return@launch
+            val text = file.readBytes().decodeToString()
+            val project = json.decodeFromString(Project.serializer(), text)
+            ProjectConverter.importProject(repository, project)
+        }
+    }
+
+    companion object {
+        var id = 1
+        fun nextId(): Int = id++
     }
 }
-

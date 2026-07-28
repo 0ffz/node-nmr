@@ -7,8 +7,9 @@ import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.svd.MathHelpers
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class ZeroFillTransformation : SignalTransformationNode() {
-    override val name: String = "Zero-fill"
     private val size by derivedStateOf { input?.fid?.size ?: 0 }
 
     override fun transform(): Deferred<Signal>? {
@@ -20,6 +21,11 @@ class ZeroFillTransformation : SignalTransformationNode() {
             input?.fid?.data?.copyInto(cache.data)
             Signal.Fid(cache)
         }
+    }
+
+    companion object : NodeInfo<ZeroFillTransformation> {
+        override val name = "Zero-fill"
+        override val factory = ::ZeroFillTransformation
     }
 }
 

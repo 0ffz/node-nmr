@@ -3,6 +3,7 @@ package me.dvyy.nmr.ui.nodes.transformations
 import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.complex.ComplexDoubleArray
 import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.ui.nodes.NodeInfo
 import kotlin.math.PI
 import kotlin.math.cos
 
@@ -59,7 +60,12 @@ fun ComplexDoubleArray.applyMsgApodization(
 }
 
 class SavitzkyGolayApodization: SignalTransformationNode() {
-    override val name: String = "Savitzky–Golay apod"
+
+
+    companion object : NodeInfo<SavitzkyGolayApodization> {
+        override val name = "Savitzky–Golay apod"
+        override val factory = ::SavitzkyGolayApodization
+    }
     override fun transform(): Deferred<Signal>? {
         return compute { TODO() }
     }

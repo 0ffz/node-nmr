@@ -8,8 +8,9 @@ import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.wavelet.MultiScanWaveletDenoise
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class MultiScanWaveletNode(): Node() {
-    override val name: String = "Multi scan denoise"
     val input = inputAttribute<SignalSet?>()
     val output = outputAttribute<SignalUiState?> {
         val inputs = input.value?.signals ?: return@outputAttribute null
@@ -21,5 +22,10 @@ class MultiScanWaveletNode(): Node() {
 
     override fun ImGuiKt.draw() {
         inputOutput(input, output)
+    }
+
+    companion object : NodeInfo<MultiScanWaveletNode> {
+        override val name = "Multi scan denoise"
+        override val factory = ::MultiScanWaveletNode
     }
 }

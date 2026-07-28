@@ -12,8 +12,9 @@ import me.dvyy.nmr.bindings.imgui.ImNodeContext
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class ExportNode: Node() {
-    override val name: String = "Export"
     val input = inputAttribute<SignalUiState?>()
 
     override fun ImGuiKt.draw() {
@@ -36,6 +37,11 @@ class ExportNode: Node() {
                 file.writeString(json)
             }
         }
+    }
+
+    companion object : NodeInfo<ExportNode> {
+        override val name = "Export"
+        override val factory = ::ExportNode
     }
 }
 

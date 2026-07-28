@@ -8,8 +8,9 @@ import me.dvyy.nmr.signal.SignalSet
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class MultiScanAverage(): Node() {
-    override val name: String = "Average"
     val input = inputAttribute<SignalSet?>()
     val output = outputAttribute<SignalUiState?> {
 //        val sampleSignal = Array(10) {
@@ -26,5 +27,10 @@ class MultiScanAverage(): Node() {
 
     override fun ImGuiKt.draw() {
         inputOutput(input, output)
+    }
+
+    companion object : NodeInfo<MultiScanAverage> {
+        override val name = "Average"
+        override val factory = ::MultiScanAverage
     }
 }

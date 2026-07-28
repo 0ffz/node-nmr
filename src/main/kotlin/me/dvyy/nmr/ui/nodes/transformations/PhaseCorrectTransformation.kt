@@ -9,8 +9,9 @@ import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.signal.SignalUiState
 
+import me.dvyy.nmr.ui.nodes.NodeInfo
+
 class PhaseCorrectTransformation : SignalTransformationNode() {
-    override val name: String = "Phase"
     private val size by derivedStateOf { input?.fid?.size ?: 0 }
 //    private val cache by derivedStateOf { ComplexDoubleArray(size) }
 //    val p0 = mutableStateOf(0.0)
@@ -32,7 +33,8 @@ class PhaseCorrectTransformation : SignalTransformationNode() {
         val input = input
         return compute { input ?: Signal.Empty }
     }
-//    override fun transform(): Deferred<Signal>? {
+
+    //    override fun transform(): Deferred<Signal>? {
 //        if (size == 0) return null
 ////        this.p0.value = p0
 ////        this.p1.value = p1
@@ -44,4 +46,8 @@ class PhaseCorrectTransformation : SignalTransformationNode() {
 //            Signal.Fft(cache.phaseCorrect(p0, p1))
 //        }
 //    }
+    companion object : NodeInfo<PhaseCorrectTransformation> {
+        override val name = "Phase"
+        override val factory = ::PhaseCorrectTransformation
+    }
 }

@@ -14,6 +14,7 @@ interface Attribute<T> {
 
 class InputAttribute<T>(
     override val id: Int,
+    val localId: Int,
     val type: KType
 ): Attribute<T> {
     private val emptyState = mutableStateOf(null)
@@ -27,6 +28,7 @@ class InputAttribute<T>(
 
 class OutputAttribute<T>(
     override val id: Int,
+    val localId: Int,
     val type: KType,
     val calculation: ()-> T,
 ): Attribute<T> {
