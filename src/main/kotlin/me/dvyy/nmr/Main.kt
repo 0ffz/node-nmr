@@ -1,5 +1,8 @@
 package me.dvyy.nmr
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import imgui.ImFontConfig
 import imgui.ImGui
@@ -21,12 +24,14 @@ import me.dvyy.nmr.helpers.loadFromResources
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.graphs.Graph2DScreen
 import me.dvyy.nmr.ui.graphs.GraphScreen
+import me.dvyy.nmr.ui.graphs.GraphType
 import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
 import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.NodeListScreen
+import java.util.EnumSet
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -69,7 +74,7 @@ class Main : Application() {
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
         val io = ImGui.getIO()
-        io.iniFilename = null                                // We don't want to save .ini file
+//        io.iniFilename = null                                // We don't want to save .ini file
         io.fonts.setFreeTypeRenderer(true)
         io.fonts.addFontFromMemoryTTF(loadFromResources("/NotoSans.ttf"), 24f, ImFontConfig())
         io.fonts.addFontFromMemoryTTF(loadFromResources("/MaterialSymbolsRounded_28pt-Regular.ttf"), 28f, ImFontConfig().apply {
@@ -116,6 +121,8 @@ class Main : Application() {
 
     }
 
+    var plots by mutableStateOf(EnumSet.of(GraphType.FID, GraphType.FFT))
+
     override fun process() = with(ImGuiKt) {
         if (applyScheduled.compareAndSet(expectedValue = true, newValue = false)) {
             Snapshot.sendApplyNotifications()
@@ -134,7 +141,9 @@ class Main : Application() {
         withStyle(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f) {
             window("Graphs") {
                 GraphScreen(
-                    nodeGraph.nodes,
+                    nodeGraph.nodes, plots, onPlotsChange = {
+                        plots = it
+                    }
                 )
             }
             window("Graphs 2D") {

@@ -4,6 +4,7 @@ import imgui.ImGui
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.nodes.Node
+import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
 import me.dvyy.nmr.ui.nodes.inputs.SyntheticDataset
 import me.dvyy.nmr.ui.nodes.outputs.GraphNode
 import me.dvyy.nmr.ui.nodes.transformations.ApodizationNode
@@ -28,6 +29,7 @@ fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
 
     collapsingHeader("1D") {
         treeNode("Data sources") {
+            DragDropTransformationSource("Dataset") { DatasetNode() }
             DragDropTransformationSource("Synthetic") { SyntheticDataset() }
         }
         treeNode("Outputs##1D") {

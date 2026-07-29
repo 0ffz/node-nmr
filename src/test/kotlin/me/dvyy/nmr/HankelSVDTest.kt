@@ -13,7 +13,33 @@ import java.lang.foreign.ValueLayout.*
 import kotlin.time.measureTime
 
 
+import me.dvyy.nmr.svd.reconstructDiagonals
+import org.junit.jupiter.api.Assertions.assertTrue
+
 class HankelSVDTest {
+    @Test
+    fun `reconstructDiagonals returns valid non-NaN array`() {
+        val rows = 20
+        val cols = 20
+        val targetLen = rows + cols - 1
+        val random = java.util.Random(42)
+        val data = DoubleArray(targetLen * 2) { random.nextDouble() }
+
+        memScoped {
+            val hankelDataSeg = this.allocate(JAVA_DOUBLE, targetLen * 2L)
+            MemorySegment.copy(data, 0, hankelDataSeg, JAVA_DOUBLE, 0, data.size)
+            val fftOp = HankelOperator(this, hankelDataSeg, rows, cols)
+            val result = Propack.partialComplexSVD(fftOp, rows, cols, numWanted = 5)
+            val reconstructed = result.reconstructDiagonals()
+
+            assertEquals(targetLen, reconstructed.size)
+            for (i in 0 until reconstructed.size) {
+                val elem = reconstructed[i]
+                assertTrue(!elem.re.isNaN() && !elem.im.isNaN(), "Element at index $i is NaN")
+            }
+        }
+    }
+
     @Test
     fun ComplexDecompositionOfDiagonal() {
         val result = memScoped {

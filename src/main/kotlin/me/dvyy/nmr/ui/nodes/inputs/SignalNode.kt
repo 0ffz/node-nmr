@@ -6,7 +6,7 @@ import me.dvyy.nmr.bindings.imgui.ImNodeContext
 import me.dvyy.nmr.signal.Signal
 import me.dvyy.nmr.ui.nodes.Node
 
-class SignalNode(val signal: Signal, override val name: String) : Node() {
+class SignalNode(val signal: Signal) : Node() {
     val input = inputAttribute<Signal>()
     val output = outputAttribute {
         input.value

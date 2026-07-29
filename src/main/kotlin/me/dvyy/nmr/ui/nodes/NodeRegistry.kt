@@ -1,5 +1,6 @@
 package me.dvyy.nmr.ui.nodes
 
+import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
 import me.dvyy.nmr.ui.nodes.inputs.SyntheticDataset
 import me.dvyy.nmr.ui.nodes.multiscan.MultiScanAverage
 import me.dvyy.nmr.ui.nodes.multiscan.MultiScanWaveletNode
@@ -29,6 +30,7 @@ object NodeRegistry {
     val availableNodes: List<NodeInfo<*>> get() = registry.values.toList()
 
     init {
+        register(DatasetNode)
         register(ApodizationNode)
         register(SavitzkyGolayApodization)
         register(ZeroFillTransformation)

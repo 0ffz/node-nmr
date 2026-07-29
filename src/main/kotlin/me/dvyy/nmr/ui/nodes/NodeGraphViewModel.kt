@@ -14,12 +14,14 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import me.dvyy.nmr.AppDispatchers
 import me.dvyy.nmr.nodes.format.Project
 import me.dvyy.nmr.nodes.format.ProjectConverter
 
 class NodeGraphViewModel(
-    val repository: NodeRepository = NodeRepository()
+    val repository: NodeRepository = NodeRepository(),
 ) {
     init {
         ImNodes.createContext()
@@ -62,7 +64,9 @@ class NodeGraphViewModel(
 
     fun saveProject() {
         scope.launch {
-            val project = ProjectConverter.exportProject(repository)
+            val project = withContext(AppDispatchers.Frontend) {
+                ProjectConverter.exportProject(repository)
+            }
             val jsonString = json.encodeToString(Project.serializer(), project)
             val file = FileKit.openFileSaver("project", defaultExtension = "json") ?: return@launch
             file.writeString(jsonString)
@@ -74,7 +78,9 @@ class NodeGraphViewModel(
             val file = FileKit.openFilePicker(dialogSettings = FileKitDialogSettings(title = "Open Project File")) ?: return@launch
             val text = file.readBytes().decodeToString()
             val project = json.decodeFromString(Project.serializer(), text)
-            ProjectConverter.importProject(repository, project)
+            withContext(AppDispatchers.Frontend) {
+                ProjectConverter.importProject(repository, project)
+            }
         }
     }
 

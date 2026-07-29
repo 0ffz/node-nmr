@@ -12,23 +12,20 @@ import me.dvyy.nmr.bindings.fftw.FftwFlag
 import me.dvyy.nmr.bindings.fftw.FftwPlan1D
 import me.dvyy.nmr.bindings.helpers.memScoped
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
+import imgui.ImGui
 import me.dvyy.nmr.bindings.imgui.implotSpec
 import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.parsing.removeDigitalFilter
 import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.signal.expApodized
 import me.dvyy.nmr.signal.fftShift
-import me.dvyy.nmr.signal.sineBellApodized
 import me.dvyy.nmr.ui.nodes.Graph2DEmitting
 import me.dvyy.nmr.ui.nodes.GraphEmitting
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.transformations.toImVec4
-import me.dvyy.nmr.ui.nodes.transformations.zeroFill
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.nio.ByteBuffer
+import java.util.*
 
 fun List<ComplexDoubleArray>.fftEachRow(): List<ComplexDoubleArray> {
     val first = first()
@@ -152,18 +149,27 @@ fun ImGuiKt.Graph2DScreen(
 
 fun ImGuiKt.GraphScreen(
     nodes: List<Node>,
+    selectedPlots: EnumSet<GraphType>,
+    onPlotsChange: (EnumSet<GraphType>) -> Unit,
 ) {
-    //TODO allow toggling certain graphs on or off
-//    if (ImGui.beginCombo("Spectrum", type.name)) {
-//        GraphType.entries.forEachIndexed { index, type ->
-//            if (ImGui.selectable(type.name, index == type.ordinal)) {
-//                onGraphChange(type)
-//            }
-//        }
-//        ImGui.endCombo()
-//    }
-    subplots("##plots", rows = 2, cols = 1){//, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
-        plot("Spectra") {
+    if (ImGui.beginCombo("Visible Plots", selectedPlots.joinToString(", ") { it.name })) {
+        GraphType.entries.forEach { type ->
+            val isSelected = selectedPlots.contains(type)
+            if (ImGui.selectable(type.name, isSelected)) {
+                val newSelection = EnumSet.copyOf(selectedPlots)
+                if (isSelected) newSelection.remove(type) else newSelection.add(type)
+                if (newSelection.isNotEmpty()) {
+                    onPlotsChange(newSelection)
+                }
+            }
+        }
+        ImGui.endCombo()
+    }
+
+    val rows = selectedPlots.size
+
+    subplots("##plots", rows = rows, cols = 1) {//, flags = ImplotSubplotFlags.ShareItems or ImplotSubplotFlags.NoTitle) {
+        if (selectedPlots.contains(GraphType.FID)) plot("Spectra") {
             nodes.forEach { node ->
                 if (node !is GraphEmitting) return@forEach
                 val graph = node.graph
@@ -176,7 +182,7 @@ fun ImGuiKt.GraphScreen(
                 }
             }
         }
-        plot("FFT") {
+        if (selectedPlots.contains(GraphType.FFT)) plot("FFT") {
             ImPlot.setupAxis(ImPlotAxis.X1, "ppm", ImPlotAxisFlags.Invert)
             nodes.forEach { node ->
                 if (node !is GraphEmitting) return@forEach
@@ -197,7 +203,7 @@ fun ImGuiKt.GraphScreen(
                 }
             }
         }
-        plot("Wavelet") {
+        if (selectedPlots.contains(GraphType.WAVELET)) plot("Wavelet") {
             nodes.forEach { node ->
                 if (node !is GraphEmitting) return@forEach
                 val graph = node.graph

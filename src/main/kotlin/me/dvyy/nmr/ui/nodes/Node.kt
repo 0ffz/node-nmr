@@ -13,7 +13,7 @@ abstract class Node {
      * otherwise falls back to the simple class name.
      */
     val nodeInfo = (this::class.companionObjectInstance as NodeInfo<*>)
-    open val name: String get() = nodeInfo.name
+    val name: String get() = nodeInfo.name
 
     val id: Int = NodeGraphViewModel.nextId()
     val attributes = mutableListOf<Attribute<*>>()

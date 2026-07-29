@@ -13,8 +13,6 @@ import org.jetbrains.bio.viktor.asF64Array
 class MultiDatasetNode(
     val datasets: List<BrukerDataset>,
 ) : Node() {
-    override val name: String = datasets.first().name
-
     val output = outputAttribute<SignalSet> {
         val data = datasets.map {
             it.readFid().removeDigitalFilter(it.acqus).apply {
@@ -36,7 +34,6 @@ class MultiDatasetNode(
 class Dataset2DNode(
     val dataset: BrukerDataset
 ) : Node() {
-    override val name: String = dataset.name
     val output = outputAttribute<List<ComplexDoubleArray>> {
         dataset.readSer().map { it.removeDigitalFilter(dataset.acqus) }
     }

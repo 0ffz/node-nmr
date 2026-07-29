@@ -22,6 +22,7 @@ fun SVDResult.reconstructDiagonals(): ComplexDoubleArray {
     val vFreq = FftwComplexArray(size)
 
     val accumFreq = FftwComplexArray(size)
+    accumFreq.segment.fill(0.toByte())
     val resultTime = FftwComplexArray(size)
 
     // 2. Create Plans (FftwFlag.ESTIMATE is safe to use before populating data)

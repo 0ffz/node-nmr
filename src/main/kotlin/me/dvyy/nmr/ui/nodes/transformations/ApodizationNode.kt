@@ -21,16 +21,16 @@ import me.dvyy.nmr.ui.nodes.nodeState
 class ApodizationNode : SignalTransformationNode(), GraphEmitting {
     var lb by nodeState(0.0001)
     var gauss by nodeState(0.0)
-    var beta by nodeState(15.0)
-    var lPrime by nodeState(4000)
+//    var beta by nodeState(0.0)
+//    var lPrime by nodeState(4000)
     var graphApodizationLine by nodeState(false)
 
     override fun ImGuiKt.draw() {
         drawInput()
         dragDouble("lb", lb, onChange = { lb = it })
         dragDouble("gauss", gauss, onChange = { gauss = it })
-        dragDouble("beta", beta, onChange = { beta = it })
-        sliderInt("l'", lPrime, min = 0, max = size, onChange = { lPrime = it })
+//        dragDouble("beta", beta, onChange = { beta = it })
+//        sliderInt("l'", lPrime, min = 0, max = size, onChange = { lPrime = it })
         checkbox("Show line", graphApodizationLine, onChange = { graphApodizationLine = it })
     }
 
@@ -44,16 +44,16 @@ class ApodizationNode : SignalTransformationNode(), GraphEmitting {
         val input = inputFid
         val lb = lb
         val gauss = gauss
-        val beta = beta
-        val lPrime = lPrime
+//        val beta = beta
+//        val lPrime = lPrime
         return compute {
             val cache = ComplexDoubleArray(size)
             input?.copyInto(cache.data)
-            cache.expApodized(lb).gaussApodized(gauss).applyMsgApodization(
+            cache.expApodized(lb).gaussApodized(gauss)/*.applyMsgApodization(
                 doubleArrayOf(
                     0.03497, 0.01399, -0.00233, -0.01399, -0.02098, -0.02331, -0.02098, -0.01399, -0.00233, 0.01399, 0.03497
                 ), beta = beta, lPrime = lPrime
-            )
+            )*/
             Signal.Fid(cache)
         }
     }
@@ -61,11 +61,11 @@ class ApodizationNode : SignalTransformationNode(), GraphEmitting {
     override val graph: GraphUiState? by derivedStateOf {
         if (!graphApodizationLine) return@derivedStateOf null
         val signal = ComplexDoubleArray(size) { ComplexDouble(1.0, 0.0) }
-        signal.expApodized(lb).gaussApodized(gauss).applyMsgApodization(
+        signal.expApodized(lb).gaussApodized(gauss)/*.applyMsgApodization(
             doubleArrayOf(
                 0.03497, 0.01399, -0.00233, -0.01399, -0.02098, -0.02331, -0.02098, -0.01399, -0.00233, 0.01399, 0.03497
             ), beta = beta, lPrime = lPrime
-        )
+        )*/
         GraphUiState("Apodization", SignalUiState(Signal.Fid(signal)))
     }
 

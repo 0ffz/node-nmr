@@ -16,13 +16,30 @@ object Propack {
         cols: Int,
         numWanted: Int,
     ): SVDResult {
-        val dim = (numWanted * 2 + 1).coerceAtLeast(20).coerceAtMost(min(rows, cols))
+        val maxPossible = min(rows, cols)
+        val actualNumWanted = numWanted.coerceIn(1, maxPossible)
+
+        // Determine Krylov subspace dimension: bounded by maxPossible
+        val dim = min(maxPossible, maxOf(actualNumWanted * 2 + 1, actualNumWanted + 10, 20))
+
+        // Calculate shifts per restart P ensuring kWanted <= dim - P - 1 when restarts are used
+        val shiftsPerRestart = if (dim > actualNumWanted) {
+            maxOf(1, dim - actualNumWanted - 1)
+        } else {
+            0
+        }
+
+        val kWanted = if (shiftsPerRestart > 0) {
+            actualNumWanted.coerceAtMost(dim - shiftsPerRestart - 1)
+        } else {
+            actualNumWanted
+        }
 
         // Allocate Matrix Arrays (Sizes based on PROPACK documentation)
         val uMatrix = arena.allocate(JAVA_DOUBLE, (rows * (dim + 1) * 2L)) // *2 for complex
         val vMatrix = arena.allocate(JAVA_DOUBLE, (cols * dim * 2L))
-        val sigmaValues = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
-        val errorBounds = arena.allocate(JAVA_DOUBLE, numWanted.toLong())
+        val sigmaValues = arena.allocate(JAVA_DOUBLE, kWanted.toLong())
+        val errorBounds = arena.allocate(JAVA_DOUBLE, kWanted.toLong())
 
         // Allocate Work Arrays
         // A standard block size for BLAS-3 performance.
@@ -55,7 +72,6 @@ object Propack {
         val zParm = arena.allocate(JAVA_DOUBLE, 2L)
         val iParm = arena.allocate(JAVA_INT, 1L)
 
-        val shiftsPerRestart = dim - numWanted
         // Execute the Lanczos SVD
         val info = PropackBindings.zlansvdIrl(
             arena = arena,
@@ -66,7 +82,7 @@ object Propack {
             nCols = cols,
             dim = dim,
             shiftsPerRestart = shiftsPerRestart,
-            numWanted = numWanted,
+            numWanted = kWanted,
             maxRestarts = 1000,
             aprod = operator,
             uMatrix = uMatrix,
@@ -89,12 +105,12 @@ object Propack {
         )
 
         if (info == 0) {
-            val singularValues = DoubleArray(numWanted) { i ->
+            val singularValues = DoubleArray(kWanted) { i ->
                 sigmaValues.get(JAVA_DOUBLE, i * 8L)
             }
 
             val u = ComplexDoubleMatrix(
-                Array(numWanted) { col ->
+                Array(kWanted) { col ->
                     val arr = ComplexDoubleArray(rows)
                     for (row in 0 until rows) {
                         val offset = (col * rows + row) * 16L
@@ -108,7 +124,7 @@ object Propack {
             )
 
             val v = ComplexDoubleMatrix(
-                Array(numWanted) { col ->
+                Array(kWanted) { col ->
                     val arr = ComplexDoubleArray(cols)
                     for (row in 0 until cols) {
                         val offset = (col * cols + row) * 16L

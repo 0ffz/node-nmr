@@ -20,8 +20,6 @@ import me.dvyy.nmr.ui.nodes.nodeState
 import me.dvyy.nmr.ui.nodes.transformations.zeroFill
 
 class Graph2DNode : Node(), Graph2DEmitting {
-    override val name: String = "Graph 2D"
-
     val input = inputAttribute<List<ComplexDoubleArray>>()
     val height by derivedStateOf { input.value?.size ?: 0 }
     val width by derivedStateOf { input.value?.first()?.size ?: 0 }

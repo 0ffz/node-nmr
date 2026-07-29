@@ -25,6 +25,7 @@ class GraphNode : Node(), GraphEmitting {
     val input = inputAttribute<SignalUiState?>()
 
     override fun ImGuiKt.draw() {
+        string.set(title)
         if (ImGui.inputText("Title", string)) {
             title = string.get()
         }

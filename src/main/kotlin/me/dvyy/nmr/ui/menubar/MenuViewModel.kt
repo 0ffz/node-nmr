@@ -45,20 +45,4 @@ class MenuViewModel(
     fun exit() {
         exitProcess(0)
     }
-
-    fun openFilePicker() {
-        scope.launch {
-            val file = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
-            val dataset = BrukerDataset(file.file.absolutePath)
-            graph.addNode(if(dataset.is2D) Dataset2DNode(dataset) else DatasetNode(dataset))
-        }
-    }
-
-    fun openMultiFilePicker() {
-        scope.launch {
-            val parentFolder = FileKit.openDirectoryPicker(dialogSettings = FileKitDialogSettings(title = "Open Bruker dataset")) ?: return@launch
-            val files = parentFolder.file.listFiles()
-            graph.addNode(MultiDatasetNode(files.map { BrukerDataset(it.absolutePath) }))
-        }
-    }
 }

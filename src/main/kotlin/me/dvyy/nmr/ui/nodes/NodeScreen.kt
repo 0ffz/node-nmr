@@ -51,9 +51,15 @@ fun ImGuiKt.NodeScreen(graph: NodeGraphViewModel) {
         if(ImNodes.getHoveredNode() != -1) {
             graph.selectedNode = ImNodes.getHoveredNode()
             ImGui.openPopup("node_menu")
+            return
         }
         val link = ImNodes.getHoveredLink()
-        graph.unlink(link)
+        if(link != -1) {
+            graph.unlink(link)
+            return
+        }
+        ImGui.openPopup("editor_context_menu")
+
     }
 
     // Drag and drop to create new nodes

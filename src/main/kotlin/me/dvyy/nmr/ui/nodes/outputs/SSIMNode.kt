@@ -21,8 +21,8 @@ class SSIMNode: Node() {
 
     override fun ImGuiKt.draw() {
         with(ImNodeContext) {
-            inputAttribute(input.id) { text("Input") }
             inputAttribute(reference.id) { text("Reference") }
+            inputAttribute(input.id) { text("Input") }
         }
 
         text("SSIM: $ssim")

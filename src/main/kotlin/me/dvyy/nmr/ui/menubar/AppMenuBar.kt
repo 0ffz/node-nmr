@@ -19,13 +19,9 @@ fun ImGuiKt.AppMenuBar(
         nodeGraph.loadProject()
     }
 
-    menu("Project") {
+    menu("File") {
         if (menuItem("Save", "Ctrl+S")) nodeGraph.saveProject()
         if (menuItem("Load", "Ctrl+O")) nodeGraph.loadProject()
-    }
-    menu("File") {
-        if (menuItem("Open")) menu.openFilePicker()
-        if (menuItem("Open Multiple")) menu.openMultiFilePicker()
         if (menuItem("Exit")) menu.exit()
     }
     menu("View") {

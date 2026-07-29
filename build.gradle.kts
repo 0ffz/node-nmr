@@ -1,6 +1,6 @@
 plugins {
     application
-    kotlin("jvm") version "2.4.0"
+    alias(libs.plugins.kotlin.jvm)
     alias(miaLibs.plugins.compose.compiler)
     alias(miaLibs.plugins.jetbrainsCompose)
     alias(miaLibs.plugins.shadowjar)
@@ -15,34 +15,20 @@ repositories {
 }
 
 dependencies {
-//    implementation("org.jetbrains.kotlinx:multik-default:0.3.1")
-//    implementation("org.jetbrains.kotlinx:multik-openblas:0.3.1")
-//    implementation("space.kscience:kmath-core:0.5.0")
-//    implementation("space.kscience:kmath-viktor:0.5.0")
-//    implementation("space.kscience:kmath-complex:0.5.0")
-//    implementation("com.github.haifengl:smile-core:6.2.0")
-//    implementation("com.github.haifengl:smile-kotlin:6.2.0")
-//    implementation("com.github.haifengl:smile-deep:6.2.0")
-//    implementation("org.ejml:ejml-all:0.44.0")
-    implementation("org.jetbrains.bio:viktor:2.0.0")
-    implementation("io.github.spair:imgui-java-lwjgl3:1.92.0")
-    implementation("io.github.spair:imgui-java-binding:1.92.0")
-    implementation("io.github.spair:imgui-java-app:1.92.0")
+    implementation(libs.viktor)
+    implementation(libs.imgui.java.lwjgl3)
+    implementation(libs.imgui.java.binding)
+    implementation(libs.imgui.java.app)
     implementation(miaLibs.kotlinx.coroutines.core)
     implementation(miaLibs.kotlinx.collections.immutable)
     implementation(miaLibs.kotlinx.serialization.json)
     implementation(miaLibs.logback.classic)
     implementation(miaLibs.kotlin.reflect)
-    implementation("org.jetbrains.compose.runtime:runtime:${miaLibs.versions.compose.asProvider().get()}")
-    implementation("org.apache.commons:commons-math3:3.6.1")
-    implementation("io.github.vinceglb:filekit-dialogs:0.14.2")
-//    implementation("net.scoreworks:ArpackJ:1.0.0")
-//    implementation("org.ojalgo:ojalgo:56.2.1")
-//    implementation("com.martmists.ndarray-simd:ndarray-simd:1.7.6")
-//    implementation("org.graalvm.polyglot:polyglot:24.1.1")
-//    implementation("org.graalvm.polyglot:python:24.1.1")
-    implementation("org.scijava:native-lib-loader:2.5.0")
-    testImplementation(kotlin("test"))
+    implementation(libs.compose.runtime)
+    implementation(libs.commons.math3)
+    implementation(libs.filekit.dialogs)
+    implementation(libs.native.lib.loader)
+    testImplementation(libs.kotlin.test)
 }
 
 kotlin {
@@ -59,8 +45,6 @@ application {
 tasks {
     test {
         useJUnitPlatform()
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
-//    shadowJar {
-//        minimize()
-//    }
 }
