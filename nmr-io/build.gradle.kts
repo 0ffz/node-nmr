@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation(miaLibs.kotlinx.serialization.json)
+    api(miaLibs.kotlinx.serialization.json)
+    api(miaLibs.kotlinx.collections.immutable)
     implementation(project(":nmr-common"))
 }

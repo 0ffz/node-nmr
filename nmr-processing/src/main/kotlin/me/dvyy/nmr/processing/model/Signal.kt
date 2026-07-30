@@ -14,6 +14,7 @@ import org.jetbrains.bio.viktor.asF64Array
  * and save on operations/floating point errors.
  */
 sealed class Signal {
+    internal abstract val data: ComplexDoubleArray
     abstract val fid: ComplexDoubleArray
     abstract val fft: ComplexDoubleArray
     val waveletLevels = 4
@@ -36,7 +37,7 @@ sealed class Signal {
         ComplexDoubleArray.from(waveletRe, waveletIm)
     }
 
-    class Fid(val data: ComplexDoubleArray) : Signal() {
+    class Fid(override val data: ComplexDoubleArray) : Signal() {
         override val fid: ComplexDoubleArray = data
         override val fft: ComplexDoubleArray by lazy {
             if (fid.size == 0) fid
@@ -56,7 +57,7 @@ sealed class Signal {
         }
     }
 
-    class Fft(val data: ComplexDoubleArray) : Signal() {
+    class Fft(override val data: ComplexDoubleArray) : Signal() {
         override val fid: ComplexDoubleArray by lazy {
             if (fft.size == 0) fft
             else memScoped {
@@ -74,7 +75,11 @@ sealed class Signal {
     }
 
     data object Empty : Signal() {
+        override val data: ComplexDoubleArray = complexDoubleArrayOf()
         override val fid: ComplexDoubleArray = complexDoubleArrayOf()
         override val fft: ComplexDoubleArray = complexDoubleArrayOf()
     }
 }
+
+fun ComplexDoubleArray.asFid() = Signal.Fid(this)
+fun ComplexDoubleArray.asFFT() = Signal.Fft(this)

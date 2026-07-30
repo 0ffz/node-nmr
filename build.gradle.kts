@@ -20,7 +20,6 @@ dependencies {
     implementation(libs.imgui.java.binding)
     implementation(libs.imgui.java.app)
     implementation(miaLibs.kotlinx.coroutines.core)
-    implementation(miaLibs.kotlinx.collections.immutable)
     implementation(miaLibs.kotlinx.serialization.json)
     implementation(miaLibs.logback.classic)
     implementation(miaLibs.kotlin.reflect)
@@ -39,7 +38,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("me.dvyy.nmr.MainKt")
+    mainClass.set("me.dvyy.nmr.app.MainKt")
     applicationDefaultJvmArgs = listOf(
         "--enable-native-access=ALL-UNNAMED"
     )
