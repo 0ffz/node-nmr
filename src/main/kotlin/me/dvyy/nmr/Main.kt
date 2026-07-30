@@ -10,6 +10,7 @@ import imgui.ImVec2
 import imgui.ImVec4
 import imgui.app.Application
 import imgui.app.Configuration
+import imgui.extension.imnodes.ImNodes
 import imgui.extension.implot.ImPlot
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
@@ -74,7 +75,7 @@ class Main : Application() {
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
         val io = ImGui.getIO()
-//        io.iniFilename = null                                // We don't want to save .ini file
+        io.iniFilename = null                                // We don't want to save .ini file
         io.fonts.setFreeTypeRenderer(true)
         io.fonts.addFontFromMemoryTTF(loadFromResources("/NotoSans.ttf"), 24f, ImFontConfig())
         io.fonts.addFontFromMemoryTTF(loadFromResources("/MaterialSymbolsRounded_28pt-Regular.ttf"), 28f, ImFontConfig().apply {
@@ -98,6 +99,7 @@ class Main : Application() {
         ImGui.pushStyleVar(ImGuiStyleVar.GrabRounding, rounding)
         ImGui.pushStyleVar(ImGuiStyleVar.TabRounding, rounding)
         ImPlot.createContext()
+        ImNodes.createContext()
         init()
     }
 

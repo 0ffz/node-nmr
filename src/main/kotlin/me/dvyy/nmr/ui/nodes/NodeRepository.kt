@@ -57,6 +57,7 @@ class NodeRepository {
                 }
             }
         }
+        node.close()
     }
 
     /**

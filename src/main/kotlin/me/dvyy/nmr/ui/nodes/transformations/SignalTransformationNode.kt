@@ -16,7 +16,6 @@ import me.dvyy.nmr.ui.nodes.Node
 
 
 abstract class SignalTransformationNode : Node() {
-    val scope = CoroutineScope(AppDispatchers.Frontend)
     var state by mutableStateOf(ComputeState.DONE)
     val inputRef = inputAttribute<SignalUiState?>()
     val input get() = inputRef.value?.signal

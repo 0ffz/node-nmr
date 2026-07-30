@@ -27,17 +27,17 @@ fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
 //    }
 
 
-    collapsingHeader("1D") {
-        treeNode("Data sources") {
+    collapsingHeader("1D", defaultOpen = true) {
+        treeNode("Data sources", defaultOpen = true) {
             DragDropTransformationSource("Dataset") { DatasetNode() }
             DragDropTransformationSource("Synthetic") { SyntheticDataset() }
         }
-        treeNode("Outputs##1D") {
+        treeNode("Outputs##1D", defaultOpen = true) {
             DragDropTransformationSource("Graph") { GraphNode() }
             DragDropTransformationSource("SSIM") { SSIMNode() }
             DragDropTransformationSource("Export") { ExportNode() }
         }
-        treeNode("Transformations") {
+        treeNode("Transformations", defaultOpen = true) {
             DragDropTransformationSource("Apodization") { ApodizationNode() }
             DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
             DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }

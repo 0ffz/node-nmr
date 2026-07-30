@@ -1,13 +1,18 @@
 package me.dvyy.nmr.ui.nodes
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import me.dvyy.nmr.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import java.text.Format
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.typeOf
 
-abstract class Node {
+abstract class Node: AutoCloseable {
+    val scope = CoroutineScope(AppDispatchers.Frontend)
+
     /**
      * Automatically retrieves the name from the companion object if it implements NodeInfo,
      * otherwise falls back to the simple class name.
@@ -52,6 +57,10 @@ abstract class Node {
 
     inline fun <reified T> outputAttribute(noinline calculation: () -> T): OutputAttribute<T> {
         return OutputAttribute(NodeGraphViewModel.nextId(), localId = attributes.size, typeOf<T>(), calculation).also { attributes += it }
+    }
+
+    override fun close() {
+        scope.cancel()
     }
 }
 

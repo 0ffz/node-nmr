@@ -23,15 +23,11 @@ import me.dvyy.nmr.nodes.format.ProjectConverter
 class NodeGraphViewModel(
     val repository: NodeRepository = NodeRepository(),
 ) {
-    init {
-        ImNodes.createContext()
-    }
-
     val editorContext = ImNodes.editorContextCreate()
     val nodes: PersistentList<Node> get() = repository.nodes
     val links: Set<NodeLink> get() = repository.links
     var selectedNode by mutableStateOf(-1)
-    val scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(AppDispatchers.Frontend)
 
     private val json = Json {
         prettyPrint = true
@@ -62,25 +58,21 @@ class NodeGraphViewModel(
         repository.clear()
     }
 
-    fun saveProject() {
-        scope.launch {
-            val project = withContext(AppDispatchers.Frontend) {
-                ProjectConverter.exportProject(repository)
-            }
-            val jsonString = json.encodeToString(Project.serializer(), project)
-            val file = FileKit.openFileSaver("project", defaultExtension = "json") ?: return@launch
+    fun saveProject() = scope.launch {
+        val project = ProjectConverter.exportProject(repository)
+        val jsonString = json.encodeToString(Project.serializer(), project)
+        withContext(Dispatchers.IO) {
+            val file = FileKit.openFileSaver("project", defaultExtension = "json") ?: return@withContext
             file.writeString(jsonString)
         }
     }
 
-    fun loadProject() {
-        scope.launch {
-            val file = FileKit.openFilePicker(dialogSettings = FileKitDialogSettings(title = "Open Project File")) ?: return@launch
-            val text = file.readBytes().decodeToString()
-            val project = json.decodeFromString(Project.serializer(), text)
-            withContext(AppDispatchers.Frontend) {
-                ProjectConverter.importProject(repository, project)
-            }
+    fun loadProject() = scope.launch(Dispatchers.IO) {
+        val file = FileKit.openFilePicker(dialogSettings = FileKitDialogSettings(title = "Open Project File")) ?: return@launch
+        val text = file.readBytes().decodeToString()
+        val project = json.decodeFromString(Project.serializer(), text)
+        withContext(AppDispatchers.Frontend) {
+            ProjectConverter.importProject(repository, project)
         }
     }
 

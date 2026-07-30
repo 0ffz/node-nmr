@@ -1,0 +1,22 @@
+[versions]
+kotlin = "2.4.0"
+compose = "1.7.3"
+viktor = "2.0.0"
+imgui = "1.92.0"
+commons-math3 = "3.6.1"
+filekit = "0.14.2"
+native-lib-loader = "2.5.0"
+
+[libraries]
+viktor = { module = "org.jetbrains.bio:viktor", version.ref = "viktor" }
+imgui-java-lwjgl3 = { module = "io.github.spair:imgui-java-lwjgl3", version.ref = "imgui" }
+imgui-java-binding = { module = "io.github.spair:imgui-java-binding", version.ref = "imgui" }
+imgui-java-app = { module = "io.github.spair:imgui-java-app", version.ref = "imgui" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
+commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
+native-lib-loader = { module = "org.scijava:native-lib-loader", version.ref = "native-lib-loader" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

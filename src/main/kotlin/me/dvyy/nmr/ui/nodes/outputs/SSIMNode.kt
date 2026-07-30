@@ -16,7 +16,7 @@ class SSIMNode: Node() {
     val ssim by derivedStateOf {
         val inp = input.value?.graphFft ?: return@derivedStateOf null
         val ref = reference.value?.graphFft ?: return@derivedStateOf null
-        SSIM.windowed(inp, ref)
+        runCatching { SSIM.windowed(inp, ref) }.getOrNull()
     }
 
     override fun ImGuiKt.draw() {

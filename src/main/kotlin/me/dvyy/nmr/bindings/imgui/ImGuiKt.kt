@@ -110,7 +110,7 @@ object ImGuiKt {
 
     inline fun collapsingHeader(
         label: String,
-        defaultOpen: Boolean = true,
+        defaultOpen: Boolean = false,
         flags: Int = 0,
         content: () -> Unit,
     ) {
@@ -120,10 +120,11 @@ object ImGuiKt {
     inline fun treeNode(
         label: String,
         flags: Int = 0,
+        defaultOpen: Boolean = false,
         header: () -> Unit = {},
         content: () -> Unit,
     ) {
-        val open = treeNodeEx(label, flags)
+        val open = treeNodeEx(label, flags or (if (defaultOpen) ImGuiTreeNodeFlags.DefaultOpen else 0))
         header()
         if(open) {
             content()
