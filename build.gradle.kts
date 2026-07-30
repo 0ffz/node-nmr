@@ -6,6 +6,7 @@ plugins {
     alias(miaLibs.plugins.shadowjar)
     alias(miaLibs.plugins.kotlinx.serialization)
     alias(miaLibs.plugins.mia.testing)
+    alias(miaLibs.plugins.mia.docs)
 }
 
 repositories {
