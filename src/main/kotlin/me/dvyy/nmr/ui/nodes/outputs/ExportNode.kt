@@ -6,15 +6,14 @@ import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import me.dvyy.nmr.AppDispatchers
+import me.dvyy.nmr.app.dispatchers.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
-
 import me.dvyy.nmr.ui.nodes.NodeInfo
 
-class ExportNode: Node() {
+class ExportNode : Node() {
     val input = inputAttribute<SignalUiState?>()
 
     override fun ImGuiKt.draw() {
@@ -30,10 +29,12 @@ class ExportNode: Node() {
             }
             AppDispatchers.scope.launch {
                 val file = FileKit.openFileSaver("data", defaultExtension = "json") ?: return@launch
-                val json = Json.encodeToString(GraphData(
-                    freq = List(targetSize) { it.toDouble() },
-                    magnitude = downsampled
-                ))
+                val json = Json.encodeToString(
+                    GraphData(
+                        freq = List(targetSize) { it.toDouble() },
+                        magnitude = downsampled
+                    )
+                )
                 file.writeString(json)
             }
         }

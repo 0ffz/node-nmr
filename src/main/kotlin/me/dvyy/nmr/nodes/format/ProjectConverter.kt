@@ -2,6 +2,10 @@ package me.dvyy.nmr.nodes.format
 
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
+import me.dvyy.nmr.io.project.LinkModel
+import me.dvyy.nmr.io.project.NodeModel
+import me.dvyy.nmr.io.project.Project
+import me.dvyy.nmr.io.project.Vec2Model
 import me.dvyy.nmr.ui.nodes.InputAttribute
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.NodeRegistry

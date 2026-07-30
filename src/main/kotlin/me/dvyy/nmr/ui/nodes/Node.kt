@@ -4,7 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import me.dvyy.nmr.AppDispatchers
+import me.dvyy.nmr.app.dispatchers.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import java.text.Format
 import kotlin.reflect.full.companionObjectInstance

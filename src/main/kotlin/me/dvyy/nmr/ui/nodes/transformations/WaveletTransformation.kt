@@ -2,14 +2,11 @@ package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.wavelet.WaveletHelpers
-
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.denoise.wavelet.WaveletHelpers
+import me.dvyy.nmr.processing.model.Signal
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.nodeState
 
@@ -21,7 +18,7 @@ class WaveletTransformation : SignalTransformationNode() {
     override fun ImGuiKt.draw() {
         drawInput()
         sliderInt("level", level, min = 1, max = 11, onChange = { level = it })
-        dragDouble("threshold", threshold, onChange = {threshold = it})
+        dragDouble("threshold", threshold, onChange = { threshold = it })
     }
 
     private val inputFftRe by derivedStateOf { input?.fft?.real() }

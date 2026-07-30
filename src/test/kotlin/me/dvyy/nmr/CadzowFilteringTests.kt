@@ -2,11 +2,11 @@ package me.dvyy.nmr
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import me.dvyy.nmr.bindings.helpers.memScoped
+import me.dvyy.nmr.bindings.common.memScoped
 import me.dvyy.nmr.bindings.propack.Propack
-import me.dvyy.nmr.complex.takeComplex
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.svd.HankelOperator
+import me.dvyy.nmr.common.math.takeComplex
+import me.dvyy.nmr.io.bruker.BrukerDataset
+import me.dvyy.nmr.processing.denoise.cadzow.HankelOperator
 import org.junit.jupiter.api.Test
 import kotlin.time.measureTimedValue
 

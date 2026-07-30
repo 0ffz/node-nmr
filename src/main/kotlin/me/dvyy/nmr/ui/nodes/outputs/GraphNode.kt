@@ -9,12 +9,10 @@ import imgui.type.ImString
 import kotlinx.serialization.builtins.nullable
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
+import me.dvyy.nmr.processing.transform.phase.findOptimalPhaseParameters
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.*
 import java.awt.Color
-
-import me.dvyy.nmr.ui.nodes.NodeInfo
 
 class GraphNode : Node(), GraphEmitting {
     var title by nodeState("Untitled")

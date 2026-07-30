@@ -16,8 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import me.dvyy.nmr.AppDispatchers
-import me.dvyy.nmr.nodes.format.Project
+import me.dvyy.nmr.app.dispatchers.AppDispatchers
+import me.dvyy.nmr.io.project.Project
 import me.dvyy.nmr.nodes.format.ProjectConverter
 
 class NodeGraphViewModel(

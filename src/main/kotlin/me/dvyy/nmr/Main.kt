@@ -17,12 +17,11 @@ import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiDir
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import me.dvyy.nmr.app.dispatchers.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.helpers.loadFromResources
-import me.dvyy.nmr.ui.SpectrumViewModel
+import me.dvyy.nmr.common.helpers.loadFromResources
 import me.dvyy.nmr.ui.graphs.Graph2DScreen
 import me.dvyy.nmr.ui.graphs.GraphScreen
 import me.dvyy.nmr.ui.graphs.GraphType
@@ -30,39 +29,15 @@ import me.dvyy.nmr.ui.menubar.AppMenuBar
 import me.dvyy.nmr.ui.menubar.MenuViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 import me.dvyy.nmr.ui.nodes.NodeScreen
-import me.dvyy.nmr.ui.processing.SingularValuesGraph
 import me.dvyy.nmr.ui.spectra.NodeListScreen
 import java.util.EnumSet
-import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.coroutines.CoroutineContext
 import imgui.internal.ImGui as ImGuiInternal
-
-class TriggeredCoroutineDispatcher(val name: String) : CoroutineDispatcher() {
-    private val taskQueue = ConcurrentLinkedQueue<Runnable>()
-
-    override fun dispatch(context: CoroutineContext, block: Runnable) {
-        taskQueue.add(block)
-    }
-
-    internal fun executeDispatchedTasks() {
-        while (taskQueue.isNotEmpty()) {
-            val task = taskQueue.poll()
-            task.run()
-        }
-    }
-}
-
-object AppDispatchers {
-    val Frontend = TriggeredCoroutineDispatcher("Frontend")
-    val scope = CoroutineScope(Dispatchers.IO)
-}
 
 @OptIn(ExperimentalAtomicApi::class)
 class Main : Application() {
     val scope = CoroutineScope(Dispatchers.IO)
-    val state = SpectrumViewModel(scope)
     val nodeGraph by lazy { NodeGraphViewModel() }
     val menuViewModel by lazy { MenuViewModel(scope, nodeGraph) }
     val uiScope = CoroutineScope(Dispatchers.Main)
@@ -117,7 +92,6 @@ class Main : Application() {
         ImGuiInternal.dockBuilderDockWindow("Graphs 2D", top.get())
         ImGuiInternal.dockBuilderDockWindow("Graphs", top.get())
         ImGuiInternal.dockBuilderDockWindow("Nodes", bottomRight.get())
-        ImGuiInternal.dockBuilderDockWindow("Singular Values", bottomLeft.get())
         ImGuiInternal.dockBuilderDockWindow("Spectra", bottomLeft.get())
         ImGuiInternal.dockBuilderFinish(dockspaceId)
 
@@ -133,10 +107,10 @@ class Main : Application() {
 
         val dockspaceId = ImGui.dockSpaceOverViewport()
         mainMenuBar {
-            AppMenuBar(state, menuViewModel, nodeGraph)
+            AppMenuBar(menuViewModel, nodeGraph)
         }
-        if (state.first) {
-            state.first = false
+        if (menuViewModel.first) {
+            menuViewModel.first = false
             setupDocking(dockspaceId)
         }
 
@@ -156,10 +130,7 @@ class Main : Application() {
         }
 
         window("Spectra") {
-            NodeListScreen(state)
-        }
-        window("Singular Values") {
-            SingularValuesGraph(state)
+            NodeListScreen()
         }
         window("Nodes") {
             NodeScreen(nodeGraph)

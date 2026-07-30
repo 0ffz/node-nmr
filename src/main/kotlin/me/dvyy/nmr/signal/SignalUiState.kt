@@ -1,7 +1,8 @@
 package me.dvyy.nmr.signal
 
-import me.dvyy.nmr.phasecorrect.PhaseParams
-import me.dvyy.nmr.phasecorrect.phaseCorrect
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.transform.phase.PhaseParams
+import me.dvyy.nmr.processing.transform.phase.phaseCorrect
 import org.jetbrains.bio.viktor.asF64Array
 
 data class SignalUiState(

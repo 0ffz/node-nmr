@@ -2,26 +2,24 @@ package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Deferred
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.complex.ComplexDouble
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.common.math.ComplexDouble
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.transform.apodization.expApodized
+import me.dvyy.nmr.processing.transform.apodization.gaussApodized
 import me.dvyy.nmr.signal.SignalUiState
-import me.dvyy.nmr.signal.expApodized
-import me.dvyy.nmr.signal.gaussApodized
 import me.dvyy.nmr.ui.nodes.GraphEmitting
 import me.dvyy.nmr.ui.nodes.GraphUiState
-
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.nodeState
 
 class ApodizationNode : SignalTransformationNode(), GraphEmitting {
     var lb by nodeState(0.0001)
     var gauss by nodeState(0.0)
-//    var beta by nodeState(0.0)
+
+    //    var beta by nodeState(0.0)
 //    var lPrime by nodeState(4000)
     var graphApodizationLine by nodeState(false)
 

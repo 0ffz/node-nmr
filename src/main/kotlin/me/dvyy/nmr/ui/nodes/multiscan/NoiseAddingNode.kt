@@ -1,10 +1,10 @@
 package me.dvyy.nmr.ui.nodes.multiscan
 
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.signal.SignalSet
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.model.SignalSet
 import me.dvyy.nmr.signal.SignalUiState
-import me.dvyy.nmr.synthetic.addGaussianNoise
+import me.dvyy.nmr.processing.transform.addGaussianNoise
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.nodeState

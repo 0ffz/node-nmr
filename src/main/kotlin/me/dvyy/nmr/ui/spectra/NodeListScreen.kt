@@ -2,7 +2,6 @@ package me.dvyy.nmr.ui.spectra
 
 import imgui.ImGui
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.inputs.DatasetNode
 import me.dvyy.nmr.ui.nodes.inputs.SyntheticDataset
@@ -20,13 +19,7 @@ import me.dvyy.nmr.ui.nodes.transformations.SVDCadzowFilter
 import me.dvyy.nmr.ui.nodes.transformations.WaveletTransformation
 import me.dvyy.nmr.ui.nodes.transformations.ZeroFillTransformation
 
-fun ImGuiKt.NodeListScreen(state: SpectrumViewModel) {
-    val spectra = state.spectra
-//    spectra.forEachIndexed { index, spectrum ->
-//        SpectrumOptions(spectrum, onDelete = { state.deleteSpectrum(index)})
-//    }
-
-
+fun ImGuiKt.NodeListScreen() {
     collapsingHeader("1D", defaultOpen = true) {
         treeNode("Data sources", defaultOpen = true) {
             DragDropTransformationSource("Dataset") { DatasetNode() }

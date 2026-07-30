@@ -2,14 +2,12 @@ package me.dvyy.nmr.ui.nodes.outputs
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.expApodized
-import me.dvyy.nmr.signal.sineBellApodized
-import me.dvyy.nmr.svd.MathHelpers
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.denoise.cadzow.MathHelpers
+import me.dvyy.nmr.processing.transform.apodization.expApodized
+import me.dvyy.nmr.processing.transform.apodization.sineBellApodized
 import me.dvyy.nmr.ui.graphs.Texture
 import me.dvyy.nmr.ui.graphs.fftEachRow
 import me.dvyy.nmr.ui.graphs.transpose

@@ -1,16 +1,15 @@
 package me.dvyy.nmr.ui.nodes.multiscan
 
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.complex.j
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.signal.SignalSet
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.common.math.j
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.model.SignalSet
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
-
 import me.dvyy.nmr.ui.nodes.NodeInfo
 
-class MultiScanAverage(): Node() {
+class MultiScanAverage() : Node() {
     val input = inputAttribute<SignalSet?>()
     val output = outputAttribute<SignalUiState?> {
 //        val sampleSignal = Array(10) {

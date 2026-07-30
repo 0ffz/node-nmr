@@ -3,11 +3,9 @@ package me.dvyy.nmr.ui.menubar
 import imgui.ImGui.*
 import imgui.flag.ImGuiKey
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.ui.SpectrumViewModel
 import me.dvyy.nmr.ui.nodes.NodeGraphViewModel
 
 fun ImGuiKt.AppMenuBar(
-    state: SpectrumViewModel,
     menu: MenuViewModel,
     nodeGraph: NodeGraphViewModel
 ) {
@@ -25,7 +23,7 @@ fun ImGuiKt.AppMenuBar(
         if (menuItem("Exit")) menu.exit()
     }
     menu("View") {
-        if (menuItem("Reset layout")) state.first = true
+        if (menuItem("Reset layout")) menu.first = true
         if (menuItem("Dark Mode", "", menu.isDarkMode)) menu.toggleDarkMode()
     }
 }

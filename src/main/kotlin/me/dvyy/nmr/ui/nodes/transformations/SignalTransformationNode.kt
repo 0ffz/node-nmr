@@ -2,15 +2,16 @@ package me.dvyy.nmr.ui.nodes.transformations
 
 import androidx.compose.runtime.*
 import imgui.ImGui
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import me.dvyy.nmr.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.processing.model.Signal
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 
@@ -57,11 +58,11 @@ abstract class SignalTransformationNode : Node() {
         snapshotFlow {
             transform()
         }.map {
-            if(it == null) return@map null
+            if (it == null) return@map null
             it.start()
             it.await()
         }.onEach {
-            if(it == null) outputState.value = null
+            if (it == null) outputState.value = null
             else outputState.value = transformUiState(inputRef.value?.copy(signal = it))
         }
             .launchIn(scope)

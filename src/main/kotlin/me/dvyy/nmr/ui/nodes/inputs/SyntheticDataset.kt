@@ -7,11 +7,11 @@ import imgui.flag.ImGuiTreeNodeFlags
 import kotlinx.collections.immutable.persistentListOf
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.synthetic.Resonance
+import me.dvyy.nmr.processing.synthetic.SyntheticSpectrum
 import me.dvyy.nmr.signal.SignalUiState
-import me.dvyy.nmr.synthetic.Resonance
-import me.dvyy.nmr.synthetic.addGaussianNoise
-import me.dvyy.nmr.synthetic.generateNmrSignal
+import me.dvyy.nmr.processing.transform.addGaussianNoise
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.PersistentListSerializer
@@ -28,10 +28,10 @@ class SyntheticDataset : Node() {
     var seed by nodeState(Random.nextLong())
 
     val fid by derivedStateOf {
-        generateNmrSignal(
-            16384,
-            dwellTime,
-            peaks,
+        SyntheticSpectrum.of(
+            numPoints = 16384,
+            dwellTimeSeconds = dwellTime,
+            resonances = peaks,
         ).addGaussianNoise(noise, seed)
     }
 

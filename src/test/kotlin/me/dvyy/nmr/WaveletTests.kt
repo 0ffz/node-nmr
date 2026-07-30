@@ -1,14 +1,11 @@
 package me.dvyy.nmr
 
-import io.kotest.matchers.equality.shouldBeEqualUsingFields
 import me.dvyy.nmr.bindings.wavelib.StationaryWaveletTransform
-import me.dvyy.nmr.synthetic.generateNmrSignal
-import me.dvyy.nmr.wavelet.MultiScanWaveletDenoise
-import me.dvyy.nmr.wavelet.WaveletHelpers.softThreshold
+import me.dvyy.nmr.processing.denoise.wavelet.MultiScanWaveletDenoise
+import me.dvyy.nmr.processing.denoise.wavelet.WaveletHelpers.softThreshold
 import org.junit.jupiter.api.Test
 import kotlin.math.abs
 import kotlin.random.Random
-import kotlin.use
 
 class WaveletTests {
     @Test

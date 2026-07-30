@@ -4,7 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import imgui.ImVec4
-import me.dvyy.nmr.complex.ComplexDoubleArray
+import me.dvyy.nmr.common.math.ComplexDoubleArray
 
 /**
  * UI State for the real part of a complex NMR signal, processed or unprocessed.

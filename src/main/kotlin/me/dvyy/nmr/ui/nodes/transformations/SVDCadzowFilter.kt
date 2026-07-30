@@ -3,17 +3,14 @@ package me.dvyy.nmr.ui.nodes.transformations
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.Snapshot
 import imgui.ImVec2
 import kotlinx.coroutines.Deferred
-import me.dvyy.nmr.bindings.helpers.memScoped
+import me.dvyy.nmr.bindings.common.memScoped
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.propack.Propack
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.svd.HankelOperator
-import me.dvyy.nmr.svd.HankelOperatorBruteForce
-import me.dvyy.nmr.svd.reconstructDiagonals
-import java.lang.foreign.MemorySegment
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.denoise.cadzow.HankelOperator
+import me.dvyy.nmr.processing.denoise.cadzow.reconstructDiagonals
 
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.nodeState

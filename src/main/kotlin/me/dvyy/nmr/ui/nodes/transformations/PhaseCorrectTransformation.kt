@@ -3,12 +3,11 @@ package me.dvyy.nmr.ui.nodes.transformations
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.Deferred
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.phasecorrect.PhaseParams
-import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.transform.phase.PhaseParams
+import me.dvyy.nmr.processing.transform.phase.findOptimalPhaseParameters
 import me.dvyy.nmr.signal.SignalUiState
-
 import me.dvyy.nmr.ui.nodes.NodeInfo
 
 class PhaseCorrectTransformation : SignalTransformationNode() {

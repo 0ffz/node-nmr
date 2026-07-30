@@ -3,9 +3,9 @@ package me.dvyy.nmr.ui.nodes.transformations
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.Deferred
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.svd.MathHelpers
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.denoise.cadzow.MathHelpers
 
 import me.dvyy.nmr.ui.nodes.NodeInfo
 

@@ -16,7 +16,6 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.viktor)
     implementation(libs.imgui.java.lwjgl3)
     implementation(libs.imgui.java.binding)
     implementation(libs.imgui.java.app)
@@ -28,7 +27,10 @@ dependencies {
     implementation(libs.compose.runtime)
     implementation(libs.commons.math3)
     implementation(libs.filekit.dialogs)
-    implementation(libs.native.lib.loader)
+    implementation(project(":nmr-common"))
+    implementation(project(":nmr-bindings"))
+    implementation(project(":nmr-io"))
+    implementation(project(":nmr-processing"))
     testImplementation(libs.kotlin.test)
 }
 

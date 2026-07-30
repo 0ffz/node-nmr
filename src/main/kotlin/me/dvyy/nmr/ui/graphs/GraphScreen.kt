@@ -1,22 +1,18 @@
 package me.dvyy.nmr.ui.graphs
 
+import imgui.ImGui
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.ImPlotPoint
 import imgui.extension.implot.ImPlotSpec
 import imgui.extension.implot.flag.ImPlotAxis
 import imgui.extension.implot.flag.ImPlotAxisFlags
 import imgui.extension.implot.flag.ImPlotItemFlags
-import me.dvyy.nmr.bindings.fftw.FftwComplexArray
-import me.dvyy.nmr.bindings.fftw.FftwDirection
-import me.dvyy.nmr.bindings.fftw.FftwFlag
-import me.dvyy.nmr.bindings.fftw.FftwPlan1D
-import me.dvyy.nmr.bindings.helpers.memScoped
+import me.dvyy.nmr.bindings.common.memScoped
+import me.dvyy.nmr.bindings.fftw.*
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
-import imgui.ImGui
 import me.dvyy.nmr.bindings.imgui.implotSpec
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.signal.fftShift
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.model.Signal
 import me.dvyy.nmr.ui.nodes.Graph2DEmitting
 import me.dvyy.nmr.ui.nodes.GraphEmitting
 import me.dvyy.nmr.ui.nodes.Node

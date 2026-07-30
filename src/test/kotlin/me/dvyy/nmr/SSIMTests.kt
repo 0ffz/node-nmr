@@ -1,15 +1,9 @@
 package me.dvyy.nmr
 
 import io.kotest.matchers.shouldBe
-import me.dvyy.nmr.evaluation.SSIM
-import me.dvyy.nmr.evaluation.SSIM.of
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
-import me.dvyy.nmr.phasecorrect.phaseCorrected
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.synthetic.addGaussianNoise
-import me.dvyy.nmr.synthetic.generateNmrSignal
-import me.dvyy.nmr.ui.nodes.inputs.SyntheticDataset
+import me.dvyy.nmr.io.bruker.BrukerDataset
+import me.dvyy.nmr.processing.evaluation.SSIM
+import me.dvyy.nmr.processing.model.Signal
 import org.junit.jupiter.api.Test
 
 class SSIMTests {

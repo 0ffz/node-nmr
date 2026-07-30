@@ -1,8 +1,8 @@
 package me.dvyy.nmr.ui.nodes.transformations
 
 import kotlinx.coroutines.Deferred
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.processing.model.Signal
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import kotlin.math.PI
 import kotlin.math.cos

@@ -6,21 +6,18 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
-import kotlinx.io.files.Path
-import me.dvyy.nmr.AppDispatchers
+import me.dvyy.nmr.app.dispatchers.AppDispatchers
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.parsing.removeDigitalFilter
-import me.dvyy.nmr.phasecorrect.findOptimalPhaseParameters
-import me.dvyy.nmr.signal.Signal
+import me.dvyy.nmr.io.bruker.BrukerDataset
+import me.dvyy.nmr.io.bruker.removeDigitalFilter
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.transform.phase.findOptimalPhaseParameters
 import me.dvyy.nmr.signal.SignalUiState
 import me.dvyy.nmr.ui.nodes.Node
 import me.dvyy.nmr.ui.nodes.NodeInfo
 import me.dvyy.nmr.ui.nodes.nodeState
-import me.dvyy.nmr.ui.nodes.transformations.ApodizationNode
 import org.jetbrains.bio.viktor.asF64Array
-import kotlin.io.path.absolutePathString
 
 class DatasetNode : Node() {
     var path by nodeState<String?>(null)
@@ -28,6 +25,7 @@ class DatasetNode : Node() {
         BrukerDataset(path ?: return@derivedStateOf null)
     }
     val numSamples by derivedStateOf { dataset?.numSamples ?: 0 }
+
     //TODO correctly store dataset reference
     val offset by derivedStateOf { dataset?.offset ?: 0.0 }
     val output = outputAttribute {

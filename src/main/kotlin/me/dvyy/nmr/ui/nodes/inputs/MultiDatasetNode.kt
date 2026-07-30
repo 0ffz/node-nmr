@@ -2,11 +2,11 @@ package me.dvyy.nmr.ui.nodes.inputs
 
 import me.dvyy.nmr.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.bindings.imgui.ImNodeContext
-import me.dvyy.nmr.complex.ComplexDoubleArray
-import me.dvyy.nmr.parsing.BrukerDataset
-import me.dvyy.nmr.parsing.removeDigitalFilter
-import me.dvyy.nmr.signal.Signal
-import me.dvyy.nmr.signal.SignalSet
+import me.dvyy.nmr.common.math.ComplexDoubleArray
+import me.dvyy.nmr.io.bruker.BrukerDataset
+import me.dvyy.nmr.io.bruker.removeDigitalFilter
+import me.dvyy.nmr.processing.model.Signal
+import me.dvyy.nmr.processing.model.SignalSet
 import me.dvyy.nmr.ui.nodes.Node
 import org.jetbrains.bio.viktor.asF64Array
 
@@ -32,7 +32,7 @@ class MultiDatasetNode(
 }
 
 class Dataset2DNode(
-    val dataset: BrukerDataset
+    val dataset: BrukerDataset,
 ) : Node() {
     val output = outputAttribute<List<ComplexDoubleArray>> {
         dataset.readSer().map { it.removeDigitalFilter(dataset.acqus) }
