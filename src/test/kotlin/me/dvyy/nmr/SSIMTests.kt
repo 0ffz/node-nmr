@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 class SSIMTests {
     @Test
-    fun `bounded ssim of the same array should be 1`() {
+    fun `ssim of the same array should be 1`() {
         val signal = doubleArrayOf(1.1, 1.9, 3.2, 3.8, 5.1)
         val ssimValue = SSIM.of(signal, signal, 1.0)
         ssimValue shouldBe 1.0

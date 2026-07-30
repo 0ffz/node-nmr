@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
+import io.kotest.matchers.equals.shouldEqual
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -16,11 +17,10 @@ class DerivedStateTests {
             println("Calculating")
             ref.value
         }
-        assertEquals(derived, "test")
+        derived shouldEqual "test"
         ref = mutableStateOf("something else")
-//        Snapshot.sendApplyNotifications()
-        assertEquals(derived, "something else")
+        derived shouldEqual "something else"
         ref.value = "something else 2"
-        assertEquals(derived, "something else 2")
+        derived shouldEqual "something else 2"
     }
 }
