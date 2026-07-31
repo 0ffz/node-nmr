@@ -1,6 +1,7 @@
 package me.dvyy.nmr.app.nodes.data
 
 import me.dvyy.nmr.app.nodes.data.inputs.DatasetNode
+import me.dvyy.nmr.app.nodes.data.inputs.MultiDatasetNode
 import me.dvyy.nmr.app.nodes.data.inputs.SyntheticDataset
 import me.dvyy.nmr.app.nodes.data.multiscan.MultiScanAverage
 import me.dvyy.nmr.app.nodes.data.multiscan.MultiScanWaveletNode
@@ -26,6 +27,7 @@ object NodeRegistry {
 
     init {
         register(DatasetNode)
+        register(MultiDatasetNode)
         register(ApodizationNode)
         register(SavitzkyGolayApodization)
         register(ZeroFillTransformation)

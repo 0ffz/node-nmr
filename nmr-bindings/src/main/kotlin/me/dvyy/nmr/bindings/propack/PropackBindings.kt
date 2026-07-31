@@ -194,7 +194,6 @@ object PropackBindings {
         zParm: MemorySegment,
         iParm: MemorySegment,
     ): Int {
-        // 1. Allocate scalar pointers in the provided Arena
         val pWhich = arena.allocateFrom(JAVA_BYTE, target.code)
         val pJobU = arena.allocateFrom(JAVA_BYTE, computeU.code)
         val pJobV = arena.allocateFrom(JAVA_BYTE, computeV.code)
@@ -212,10 +211,8 @@ object PropackBindings {
         val pLIWork = arena.allocateFrom(JAVA_INT, iWorkSize)
         val pInfo = arena.allocateFrom(JAVA_INT, 0) // Output parameter
 
-        // 2. Setup the Upcall Stub for APROD
         val aprodStub = createAprodStub(arena, aprod)
 
-        // 3. Invoke Fortran
         zlanSvdIrlHandle.invokeExact(
             pWhich, pJobU, pJobV, pM, pN, pDim, pP, pNWanted, pMaxIter,
             aprodStub, uMatrix, pLdu, sigmaValues, errorBounds, vMatrix, pLdv,
@@ -223,7 +220,6 @@ object PropackBindings {
             dOption, iOption, pInfo, zParm, iParm
         )
 
-        // 4. Return the resulting info code
         return pInfo.get(JAVA_INT, 0L)
     }
 
@@ -355,8 +351,6 @@ object PropackBindings {
         zParm: MemorySegment,
         iParm: MemorySegment,
     ): Int {
-        // 1. Allocate scalar pointers in the provided Arena
-//        val pWhich = arena.allocateFrom(JAVA_BYTE, target.code)
         val pJobU = arena.allocateFrom(JAVA_BYTE, computeU.code)
         val pJobV = arena.allocateFrom(JAVA_BYTE, computeV.code)
         val pM = arena.allocateFrom(JAVA_INT, mRows)
@@ -371,10 +365,8 @@ object PropackBindings {
         val pLIWork = arena.allocateFrom(JAVA_INT, iWorkSize)
         val pInfo = arena.allocateFrom(JAVA_INT, 0) // Output parameter
 
-        // 2. Setup the Upcall Stub for APROD
         val aprodStub = createAprodStub(arena, aprod)
 
-        // 3. Invoke Fortran
         zlanSvdHandle.invokeExact(
             pJobU, pJobV, pM, pN, pKWanted, pKMax,
             aprodStub, uMatrix, pLdu, sigmaValues, errorBounds,
@@ -382,7 +374,6 @@ object PropackBindings {
             iOption, pInfo, zParm, iParm,
         )
 
-        // 4. Return the resulting info code
         return pInfo.get(JAVA_INT, 0L)
     }
 
@@ -390,23 +381,11 @@ object PropackBindings {
      * Binds the Kotlin lambda to a native function pointer.
      */
     private fun createAprodStub(arena: Arena, operator: LinearOperator): MemorySegment {
-        // We need a static-like method to bind to MethodHandles. 
-        // We use a local stub instance to route the static call back to our specific operator.
         val proxy = LinearOperatorStub(operator)
-        val handle = MethodHandles.lookup().bind(
-            proxy,
-            "invoke",
-            MethodType.methodType(
-                Void.TYPE,
-                MemorySegment::class.java,
-                MemorySegment::class.java,
-                MemorySegment::class.java,
-                MemorySegment::class.java,
-                MemorySegment::class.java,
-                MemorySegment::class.java,
-                MemorySegment::class.java
-            )
-        )
+        val targetType = APROD_DESC.toMethodType()
+        val handle = MethodHandles.lookup()
+            .findVirtual(LinearOperatorStub::class.java, "invoke", targetType)
+            .bindTo(proxy)
         return linker.upcallStub(handle, APROD_DESC, arena)
     }
 
@@ -421,18 +400,11 @@ object PropackBindings {
             pZparm: MemorySegment,
             pIparm: MemorySegment,
         ) {
-            // 1. Reinterpret the zero-length scalar pointers BEFORE reading!
-            // pTransa is a single character (1 byte)
             val transChar = pTransa.reinterpret(1L).get(JAVA_BYTE, 0L).toInt().toChar()
-
-            // pM and pN are standard 32-bit integers (4 bytes)
             val m = pM.reinterpret(4L).get(JAVA_INT, 0L)
             val n = pN.reinterpret(4L).get(JAVA_INT, 0L)
-
             val transpose = transChar == 'C' || transChar == 'c'
 
-            // 2. Calculate byte sizes to reinterpret the array pointers
-            // Complex Double = 16 bytes per element (2x 8-byte doubles).
             val inSize = if (transpose) m else n
             val outSize = if (transpose) n else m
 

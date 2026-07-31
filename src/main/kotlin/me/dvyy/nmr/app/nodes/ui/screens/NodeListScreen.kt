@@ -4,6 +4,7 @@ import imgui.ImGui
 import me.dvyy.nmr.app.bindings.imgui.ImGuiKt
 import me.dvyy.nmr.app.nodes.data.Node
 import me.dvyy.nmr.app.nodes.data.inputs.DatasetNode
+import me.dvyy.nmr.app.nodes.data.inputs.MultiDatasetNode
 import me.dvyy.nmr.app.nodes.data.inputs.SyntheticDataset
 import me.dvyy.nmr.app.nodes.data.outputs.GraphNode
 import me.dvyy.nmr.app.nodes.data.transformations.ApodizationNode
@@ -45,6 +46,7 @@ fun ImGuiKt.NodeListScreen() {
         }
     }
     collapsingHeader("Multi signal") {
+        DragDropTransformationSource("Multi Dataset") { MultiDatasetNode() }
         DragDropTransformationSource("Add noise") { NoiseAddingNode() }
         DragDropTransformationSource("Select signal") { SignalSelectNode() }
         DragDropTransformationSource("Multi scan wavelet denoise") { MultiScanWaveletNode() }
