@@ -23,6 +23,7 @@ class SignalSelectNode : Node() {
 
     companion object : NodeInfo<SignalSelectNode> {
         override val name = "Select signal"
+        override val category = "Multi signal"
         override val factory = ::SignalSelectNode
     }
 }

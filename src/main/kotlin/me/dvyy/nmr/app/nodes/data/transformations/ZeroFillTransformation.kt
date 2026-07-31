@@ -25,6 +25,8 @@ class ZeroFillTransformation : SignalTransformationNode() {
 
     companion object : NodeInfo<ZeroFillTransformation> {
         override val name = "Zero-fill"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::ZeroFillTransformation
     }
 }

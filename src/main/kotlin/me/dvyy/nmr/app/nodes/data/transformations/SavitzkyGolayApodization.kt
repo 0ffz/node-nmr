@@ -11,7 +11,9 @@ class SavitzkyGolayApodization : SignalTransformationNode() {
     }
 
     companion object : NodeInfo<SavitzkyGolayApodization> {
-        override val name = "Savitzky–Golay apod"
+        override val name = "Savitzky-Golay apod"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::SavitzkyGolayApodization
     }
 }

@@ -29,6 +29,8 @@ class SSIMNode : Node() {
 
     companion object : NodeInfo<SSIMNode> {
         override val name = "SSIM"
+        override val category = "1D"
+        override val subcategory = "Outputs"
         override val factory = ::SSIMNode
     }
 }

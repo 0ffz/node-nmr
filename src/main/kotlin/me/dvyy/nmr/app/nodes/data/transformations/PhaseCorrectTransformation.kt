@@ -29,6 +29,8 @@ class PhaseCorrectTransformation : SignalTransformationNode() {
 
     companion object : NodeInfo<PhaseCorrectTransformation> {
         override val name = "Phase"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::PhaseCorrectTransformation
     }
 }

@@ -8,6 +8,7 @@ import me.dvyy.nmr.app.nodes.data.multiscan.MultiScanWaveletNode
 import me.dvyy.nmr.app.nodes.data.multiscan.NoiseAddingNode
 import me.dvyy.nmr.app.nodes.data.multiscan.SignalSelectNode
 import me.dvyy.nmr.app.nodes.data.outputs.ExportNode
+import me.dvyy.nmr.app.nodes.data.outputs.Graph2DNode
 import me.dvyy.nmr.app.nodes.data.outputs.GraphNode
 import me.dvyy.nmr.app.nodes.data.outputs.SSIMNode
 import me.dvyy.nmr.app.nodes.data.transformations.*
@@ -26,21 +27,31 @@ object NodeRegistry {
     val availableNodes: List<NodeInfo<*>> get() = registry.values.toList()
 
     init {
+        // 1D Data sources
         register(DatasetNode)
-        register(MultiDatasetNode)
+        register(SyntheticDataset)
+
+        // 1D Outputs
+        register(GraphNode)
+        register(SSIMNode)
+        register(ExportNode)
+
+        // 1D Transformations
         register(ApodizationNode)
         register(SavitzkyGolayApodization)
         register(ZeroFillTransformation)
         register(PhaseCorrectTransformation)
         register(WaveletTransformation)
         register(SVDCadzowFilter)
-        register(SyntheticDataset)
-        register(GraphNode)
-        register(ExportNode)
-        register(SSIMNode)
+
+        // 2D Outputs
+        register(Graph2DNode)
+
+        // Multi signal
+        register(MultiDatasetNode)
         register(NoiseAddingNode)
         register(SignalSelectNode)
-        register(MultiScanAverage)
         register(MultiScanWaveletNode)
+        register(MultiScanAverage)
     }
 }

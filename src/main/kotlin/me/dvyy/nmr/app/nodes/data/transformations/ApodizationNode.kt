@@ -70,6 +70,8 @@ class ApodizationNode : SignalTransformationNode(), GraphEmitting {
 
     companion object : NodeInfo<ApodizationNode> {
         override val name = "Apodization"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::ApodizationNode
     }
 }

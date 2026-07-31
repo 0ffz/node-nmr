@@ -76,6 +76,8 @@ class SyntheticDataset : Node() {
 
     companion object : NodeInfo<SyntheticDataset> {
         override val name = "Synthetic"
+        override val category = "1D"
+        override val subcategory = "Data sources"
         override val factory = ::SyntheticDataset
     }
 }

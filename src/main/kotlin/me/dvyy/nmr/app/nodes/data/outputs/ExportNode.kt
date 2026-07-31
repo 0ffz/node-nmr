@@ -42,6 +42,8 @@ class ExportNode : Node() {
 
     companion object : NodeInfo<ExportNode> {
         override val name = "Export"
+        override val category = "1D"
+        override val subcategory = "Outputs"
         override val factory = ::ExportNode
     }
 }

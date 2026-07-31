@@ -61,6 +61,8 @@ class DatasetNode : Node() {
 
     companion object : NodeInfo<DatasetNode> {
         override val name = "Dataset"
+        override val category = "1D"
+        override val subcategory = "Data sources"
         override val factory = ::DatasetNode
     }
 }

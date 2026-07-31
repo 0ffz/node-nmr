@@ -31,6 +31,7 @@ class MultiScanAverage : Node() {
 
     companion object : NodeInfo<MultiScanAverage> {
         override val name = "Average"
+        override val category = "Multi signal"
         override val factory = ::MultiScanAverage
     }
 }

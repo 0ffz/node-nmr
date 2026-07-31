@@ -53,6 +53,8 @@ class GraphNode : Node(), GraphEmitting {
 
     companion object : NodeInfo<GraphNode> {
         override val name = "Graph"
+        override val category = "1D"
+        override val subcategory = "Outputs"
         override val factory = ::GraphNode
     }
 }

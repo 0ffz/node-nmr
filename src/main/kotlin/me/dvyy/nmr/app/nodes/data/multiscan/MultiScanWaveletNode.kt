@@ -25,7 +25,8 @@ class MultiScanWaveletNode : Node() {
     }
 
     companion object : NodeInfo<MultiScanWaveletNode> {
-        override val name = "Multi scan denoise"
+        override val name = "Multi scan wavelet denoise"
+        override val category = "Multi signal"
         override val factory = ::MultiScanWaveletNode
     }
 }

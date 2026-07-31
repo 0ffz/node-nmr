@@ -49,6 +49,8 @@ class SVDCadzowFilter : SignalTransformationNode() {
 
     companion object : NodeInfo<SVDCadzowFilter> {
         override val name = "SVD"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::SVDCadzowFilter
     }
 }

@@ -51,6 +51,8 @@ class WaveletTransformation : SignalTransformationNode() {
 
     companion object : NodeInfo<WaveletTransformation> {
         override val name = "Wavelet denoise"
+        override val category = "1D"
+        override val subcategory = "Transformations"
         override val factory = ::WaveletTransformation
     }
 }

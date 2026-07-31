@@ -2,66 +2,37 @@ package me.dvyy.nmr.app.nodes.ui.screens
 
 import imgui.ImGui
 import me.dvyy.nmr.app.bindings.imgui.ImGuiKt
-import me.dvyy.nmr.app.nodes.data.Node
-import me.dvyy.nmr.app.nodes.data.inputs.DatasetNode
-import me.dvyy.nmr.app.nodes.data.inputs.MultiDatasetNode
-import me.dvyy.nmr.app.nodes.data.inputs.SyntheticDataset
-import me.dvyy.nmr.app.nodes.data.outputs.GraphNode
-import me.dvyy.nmr.app.nodes.data.transformations.ApodizationNode
-import me.dvyy.nmr.app.nodes.data.multiscan.MultiScanAverage
-import me.dvyy.nmr.app.nodes.data.multiscan.MultiScanWaveletNode
-import me.dvyy.nmr.app.nodes.data.multiscan.NoiseAddingNode
-import me.dvyy.nmr.app.nodes.data.multiscan.SignalSelectNode
-import me.dvyy.nmr.app.nodes.data.outputs.ExportNode
-import me.dvyy.nmr.app.nodes.data.outputs.Graph2DNode
-import me.dvyy.nmr.app.nodes.data.outputs.SSIMNode
-import me.dvyy.nmr.app.nodes.data.transformations.PhaseCorrectTransformation
-import me.dvyy.nmr.app.nodes.data.transformations.SVDCadzowFilter
-import me.dvyy.nmr.app.nodes.data.transformations.WaveletTransformation
-import me.dvyy.nmr.app.nodes.data.transformations.ZeroFillTransformation
+import me.dvyy.nmr.app.nodes.data.NodeInfo
+import me.dvyy.nmr.app.nodes.data.NodeRegistry
 
 fun ImGuiKt.NodeListScreen() {
-    collapsingHeader("1D", defaultOpen = true) {
-        treeNode("Data sources", defaultOpen = true) {
-            DragDropTransformationSource("Dataset") { DatasetNode() }
-            DragDropTransformationSource("Synthetic") { SyntheticDataset() }
+    val nodesByCategory = NodeRegistry.availableNodes.groupBy { it.category }
+    for ((category, categoryNodes) in nodesByCategory) {
+        val is1D = category == "1D"
+        collapsingHeader(category, defaultOpen = is1D) {
+            val nodesBySubcategory = categoryNodes.groupBy { it.subcategory }
+            for ((subcategory, nodes) in nodesBySubcategory) {
+                if (subcategory != null) {
+                    treeNode("$subcategory##$category", defaultOpen = is1D) {
+                        for (nodeInfo in nodes) {
+                            DragDropTransformationSource(nodeInfo)
+                        }
+                    }
+                } else {
+                    for (nodeInfo in nodes) {
+                        DragDropTransformationSource(nodeInfo)
+                    }
+                }
+            }
         }
-        treeNode("Outputs##1D", defaultOpen = true) {
-            DragDropTransformationSource("Graph") { GraphNode() }
-            DragDropTransformationSource("SSIM") { SSIMNode() }
-            DragDropTransformationSource("Export") { ExportNode() }
-        }
-        treeNode("Transformations", defaultOpen = true) {
-            DragDropTransformationSource("Apodization") { ApodizationNode() }
-            DragDropTransformationSource("Zero-fill") { ZeroFillTransformation() }
-            DragDropTransformationSource("Phase") { PhaseCorrectTransformation() }
-            DragDropTransformationSource("Wavelet denoise") { WaveletTransformation() }
-            DragDropTransformationSource("Cadzow filter") { SVDCadzowFilter() }
-        }
-
-    }
-    collapsingHeader("2D") {
-        treeNode("Outputs##2D") {
-            DragDropTransformationSource("Graph 2D") { Graph2DNode() }
-        }
-    }
-    collapsingHeader("Multi signal") {
-        DragDropTransformationSource("Multi Dataset") { MultiDatasetNode() }
-        DragDropTransformationSource("Add noise") { NoiseAddingNode() }
-        DragDropTransformationSource("Select signal") { SignalSelectNode() }
-        DragDropTransformationSource("Multi scan wavelet denoise") { MultiScanWaveletNode() }
-        DragDropTransformationSource("Average") { MultiScanAverage() }
     }
 }
 
-fun ImGuiKt.DragDropTransformationSource(
-    name: String,
-    create: () -> Node,
-) {
-    ImGui.button(name)
+fun ImGuiKt.DragDropTransformationSource(info: NodeInfo<*>) {
+    ImGui.button(info.name)
     if (ImGui.beginDragDropSource()) {
-        ImGui.setDragDropPayload("node", create)
-        ImGui.text(name)
+        ImGui.setDragDropPayload("node", info.factory)
+        ImGui.text(info.name)
         ImGui.endDragDropSource()
     }
 }

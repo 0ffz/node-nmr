@@ -9,6 +9,7 @@ import me.dvyy.nmr.app.graphs.data.Graph2DEmitting
 import me.dvyy.nmr.app.graphs.data.fftEachRow
 import me.dvyy.nmr.app.graphs.ui.state.Graph2DUiState
 import me.dvyy.nmr.app.nodes.data.Node
+import me.dvyy.nmr.app.nodes.data.NodeInfo
 import me.dvyy.nmr.app.nodes.data.parameters.nodeState
 import me.dvyy.nmr.app.nodes.data.transformations.zeroFill
 import me.dvyy.nmr.common.math.ComplexDoubleArray
@@ -50,5 +51,12 @@ class Graph2DNode : Node(), Graph2DEmitting {
             inputAttribute(input.id) { text("Input") }
         }
         dragDouble("lb", lb, onChange = { lb = it })
+    }
+
+    companion object : NodeInfo<Graph2DNode> {
+        override val name = "Graph 2D"
+        override val category = "2D"
+        override val subcategory = "Outputs"
+        override val factory = ::Graph2DNode
     }
 }

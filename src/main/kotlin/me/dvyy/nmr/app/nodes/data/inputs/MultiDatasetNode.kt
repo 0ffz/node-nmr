@@ -64,6 +64,7 @@ class MultiDatasetNode : Node() {
 
     companion object : NodeInfo<MultiDatasetNode> {
         override val name = "Multi Dataset"
+        override val category = "Multi signal"
         override val factory = ::MultiDatasetNode
     }
 }

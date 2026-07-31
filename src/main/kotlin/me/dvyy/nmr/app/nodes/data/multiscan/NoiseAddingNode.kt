@@ -33,6 +33,7 @@ class NoiseAddingNode : Node() {
 
     companion object : NodeInfo<NoiseAddingNode> {
         override val name = "Add noise"
+        override val category = "Multi signal"
         override val factory = ::NoiseAddingNode
     }
 }
