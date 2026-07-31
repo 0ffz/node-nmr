@@ -23,6 +23,6 @@
 
 ## Bindings
 
-- [Java FFM API](/nmr-bindings/ffm-api)
-- [FFTW3](/nmr-bindings/fftw)
-- [PROPACK](/nmr-bindings/propack)
+- [Java FFM API](/bindings/ffm-api)
+- [FFTW3](/bindings/fftw)
+- [PROPACK](/bindings/propack)

@@ -1,6 +1,16 @@
-# Kotlin NMR
+# NodeNMR
 
-A user interface for analyzing and denoising NMR signals with Kotlin implementation of different denoising methods and bindings for native libraries.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img src="assets/banner-light.svg">
+</picture>
+
+
+A node graph interface for analyzing and denoising NMR signals written in Kotlin.
+We currently implement 1D denoising methods including: apodization functions, wavelet denoising, and Cadzow filtering with a fast partial SVD implementation.
+
+[Read the docs](https://nmr.dvyy.me) for more info
 
 # Native libraries used
 

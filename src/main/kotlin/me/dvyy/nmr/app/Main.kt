@@ -48,6 +48,10 @@ class Main : Application() {
         applyScheduled.compareAndSet(expectedValue = false, newValue = true)
     }
 
+    override fun configure(config: Configuration) {
+        config.title = "NodeNMR"
+    }
+
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
         val io = ImGui.getIO()

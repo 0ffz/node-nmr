@@ -1,3 +1,6 @@
 #TODO Populate with project info here, update TOPBAR.md and SUMMARY.md too!
-name: nmr-kotlin
-siteUrl: https://nmrnodes.dvyy.me
+name: NodeNMR
+siteUrl: https://nmr.dvyy.me
+#theme:
+#  textColor: purple
+#  highlightColor: purple
